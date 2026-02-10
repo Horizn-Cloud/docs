@@ -1,0 +1,27 @@
+---
+title: "Get site"
+openapi: "GET /site"
+description: "Get details about the dealership associated with this API key"
+---
+
+Returns basic information about the dealership site linked to your API key.
+
+**Scope required:** `site:read`
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "id": "site-uuid-123",
+    "name": "Sunrise Honda",
+    "domain": "sunrisehonda.com",
+    "oem": "Honda",
+    "location": {
+      "city": "Miami",
+      "state": "FL",
+      "zip": "33101"
+    }
+  }
+}
+```
+</ResponseExample>

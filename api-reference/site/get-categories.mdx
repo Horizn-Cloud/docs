@@ -1,0 +1,21 @@
+---
+title: "Get categories"
+openapi: "GET /site/categories"
+description: "List content categories for this site"
+---
+
+Returns the content categories configured for the site. Categories are used to organize IdeaClouds and articles.
+
+**Scope required:** `site:read`
+
+<ResponseExample>
+```json 200
+{
+  "data": [
+    { "id": "cat-uuid-1", "name": "Model Research", "slug": "model-research" },
+    { "id": "cat-uuid-2", "name": "Comparisons", "slug": "comparisons" },
+    { "id": "cat-uuid-3", "name": "Service & Maintenance", "slug": "service-maintenance" }
+  ]
+}
+```
+</ResponseExample>

@@ -1,0 +1,30 @@
+---
+title: "Get elements"
+openapi: "GET /site/elements"
+description: "List design elements (CTAs, callouts) for this site"
+---
+
+Returns the design elements configured for this site, such as calls-to-action and callout blocks that can be embedded in content.
+
+**Scope required:** `site:read`
+
+<ResponseExample>
+```json 200
+{
+  "data": [
+    {
+      "id": "elem-uuid-1",
+      "name": "Schedule Test Drive CTA",
+      "type": "cta",
+      "html": "<div class=\"cta\"><a href=\"/schedule-test-drive\">Schedule a Test Drive</a></div>"
+    },
+    {
+      "id": "elem-uuid-2",
+      "name": "Finance Banner",
+      "type": "callout",
+      "html": "<div class=\"callout\">Special financing available. <a href=\"/finance\">Learn more</a></div>"
+    }
+  ]
+}
+```
+</ResponseExample>

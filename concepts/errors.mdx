@@ -1,0 +1,84 @@
+---
+title: "Errors"
+description: "Error response format and error codes"
+---
+
+All errors follow a consistent JSON format with a machine-readable `code` and human-readable `message`.
+
+## Error response format
+
+```json
+{
+  "error": {
+    "code": "validation_error",
+    "message": "keyword: Required",
+    "details": { ... },
+    "request_id": "req_abc123"
+  }
+}
+```
+
+| Field | Description |
+| --- | --- |
+| `code` | Machine-readable error code (see table below) |
+| `message` | Human-readable explanation |
+| `details` | Additional context (optional) |
+| `request_id` | Unique request identifier for support (optional) |
+
+## HTTP status codes
+
+| Status | Meaning |
+| --- | --- |
+| `200` | Request succeeded |
+| `201` | Resource created |
+| `202` | Async operation accepted and started |
+| `204` | Deleted (no response body) |
+| `400` | Invalid request parameters |
+| `401` | Authentication failed |
+| `403` | Authenticated but lacking permissions |
+| `404` | Resource not found or not accessible |
+| `409` | Idempotency conflict |
+| `429` | Rate limit exceeded |
+| `500` | Server error |
+
+## Error codes
+
+| Code | Status | Description |
+| --- | --- | --- |
+| `validation_error` | 400 | Request body or parameters failed validation |
+| `unauthorized` | 401 | Missing or invalid API key |
+| `key_expired` | 401 | API key has expired |
+| `key_revoked` | 401 | API key has been revoked |
+| `forbidden` | 403 | Key lacks the required scope |
+| `not_found` | 404 | Resource does not exist or is not accessible to this key |
+| `idempotency_conflict` | 409 | Same idempotency key used with different parameters |
+| `rate_limit_exceeded` | 429 | Too many requests |
+| `internal_error` | 500 | Unexpected server error |
+
+## Handling errors
+
+```javascript
+const response = await fetch(url, { headers });
+
+if (!response.ok) {
+  const { error } = await response.json();
+
+  switch (error.code) {
+    case 'validation_error':
+      console.error('Bad request:', error.message);
+      break;
+    case 'rate_limit_exceeded':
+      const retryAfter = response.headers.get('Retry-After');
+      await sleep(retryAfter * 1000);
+      // retry the request
+      break;
+    case 'unauthorized':
+    case 'key_expired':
+    case 'key_revoked':
+      console.error('Auth issue:', error.message);
+      break;
+    default:
+      console.error('API error:', error.code, error.message);
+  }
+}
+```

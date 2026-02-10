@@ -1,0 +1,22 @@
+---
+title: "Article types"
+openapi: "GET /reference/article-types"
+description: "List all available article types"
+---
+
+Returns the full list of article types supported by the platform.
+
+<ResponseExample>
+```json 200
+{
+  "data": [
+    { "id": "basic", "name": "Basic Article", "description": "Standard informational article" },
+    { "id": "qa", "name": "Q&A Article", "description": "Question and answer format" },
+    { "id": "expert", "name": "Expert Article", "description": "In-depth expert analysis" },
+    { "id": "modellanding", "name": "Model Landing Page", "description": "Vehicle model overview" },
+    { "id": "comparison", "name": "Comparison", "description": "Side-by-side vehicle comparison" },
+    { "id": "salesevent", "name": "Sales Event", "description": "Promotional sales event page" }
+  ]
+}
+```
+</ResponseExample>

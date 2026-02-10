@@ -1,0 +1,78 @@
+---
+title: "Pagination"
+description: "Navigate through large result sets"
+---
+
+List endpoints return paginated results using cursor-based pagination.
+
+## Response format
+
+Paginated responses include a `pagination` object alongside the `data` array:
+
+```json
+{
+  "data": [
+    { "id": "abc-123", "title": "..." },
+    { "id": "def-456", "title": "..." }
+  ],
+  "pagination": {
+    "has_more": true,
+    "next_cursor": "eyJpZCI6ImRlZi00NTYifQ==",
+    "total_count": 142
+  }
+}
+```
+
+| Field | Description |
+| --- | --- |
+| `has_more` | `true` if more results exist beyond this page |
+| `next_cursor` | Opaque cursor to pass as `cursor` query parameter for the next page. `null` if no more results. |
+| `total_count` | Total number of matching records |
+
+## Query parameters
+
+| Parameter | Default | Max | Description |
+| --- | --- | --- | --- |
+| `limit` | 25 | 100 | Number of results per page |
+| `cursor` | — | — | Cursor from a previous response's `pagination.next_cursor` |
+
+## Example: paginating through IdeaClouds
+
+**First page:**
+
+```bash
+curl "https://public-api.hrizn.io/public/ideaclouds?limit=10" \
+  -H "X-API-Key: hzk_your_key_here"
+```
+
+**Next page:**
+
+```bash
+curl "https://public-api.hrizn.io/public/ideaclouds?limit=10&cursor=eyJpZCI6ImRlZi00NTYifQ==" \
+  -H "X-API-Key: hzk_your_key_here"
+```
+
+**Iterate until done:**
+
+```javascript
+async function fetchAll(baseUrl, apiKey) {
+  const results = [];
+  let cursor = null;
+
+  do {
+    const url = new URL(baseUrl);
+    url.searchParams.set('limit', '100');
+    if (cursor) url.searchParams.set('cursor', cursor);
+
+    const res = await fetch(url, {
+      headers: { 'X-API-Key': apiKey },
+    });
+    const json = await res.json();
+
+    results.push(...json.data);
+    cursor = json.pagination.next_cursor;
+  } while (cursor);
+
+  return results;
+}
+```

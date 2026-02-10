@@ -1,0 +1,22 @@
+---
+title: "Component types"
+openapi: "GET /reference/component-types"
+description: "List all article component types"
+---
+
+Returns the types of components that can be attached to articles (body, SEO metadata, schemas, etc.).
+
+<ResponseExample>
+```json 200
+{
+  "data": [
+    { "id": "Body", "description": "Main article HTML content" },
+    { "id": "SeoMetadata", "description": "Title, description, and keywords for SEO" },
+    { "id": "JsonLdSchema", "description": "Structured data markup (JSON-LD)" },
+    { "id": "OpenGraph", "description": "Open Graph meta tags for social sharing" },
+    { "id": "TwitterCard", "description": "Twitter Card meta tags" },
+    { "id": "FAQ", "description": "Structured FAQ content (FAQPage schema)" }
+  ]
+}
+```
+</ResponseExample>

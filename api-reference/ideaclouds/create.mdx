@@ -1,0 +1,52 @@
+---
+title: "Create IdeaCloud"
+openapi: "POST /ideaclouds"
+description: "Start AI-powered keyword research on a topic"
+---
+
+Creates a new IdeaCloud that researches a keyword or topic, gathers questions from the web, clusters them by intent, and identifies the best angles for content.
+
+**Scope required:** `ideaclouds:write`
+
+## Request body
+
+<ParamField body="keyword" type="string" required>
+  The keyword or topic to research. 1-500 characters.
+</ParamField>
+
+<ParamField body="category_id" type="string">
+  Optional category UUID to associate with this IdeaCloud.
+</ParamField>
+
+## Response
+
+Returns `202 Accepted` with the IdeaCloud ID and initial status.
+
+<ResponseField name="id" type="string">
+  UUID of the created IdeaCloud.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Initial status: `researching`.
+</ResponseField>
+
+<ResponseField name="keyword" type="string">
+  The keyword being researched.
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp.
+</ResponseField>
+
+<ResponseExample>
+```json 202
+{
+  "data": {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "status": "researching",
+    "keyword": "2025 Honda CR-V reviews",
+    "created_at": "2026-02-10T12:00:00.000Z"
+  }
+}
+```
+</ResponseExample>

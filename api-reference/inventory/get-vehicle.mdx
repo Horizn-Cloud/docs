@@ -1,0 +1,46 @@
+---
+title: "Get vehicle"
+openapi: "GET /inventory/{vin}"
+description: "Get full details for a specific vehicle"
+---
+
+Returns complete vehicle details including specs, pricing, and photo URLs.
+
+**Scope required:** `inventory:read`
+
+## Path parameters
+
+<ParamField path="id" type="string" required>UUID of the vehicle.</ParamField>
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "id": "veh-uuid-123",
+    "vin": "1HGBH41JXMN109186",
+    "year": 2025,
+    "make": "Honda",
+    "model": "CR-V",
+    "trim": "EX-L",
+    "condition": "new",
+    "stock_number": "H12345",
+    "price": 38500,
+    "msrp": 39500,
+    "mileage": 12,
+    "exterior_color": "Radiant Red Metallic",
+    "interior_color": "Black",
+    "engine": "1.5L Turbo I4",
+    "transmission": "CVT",
+    "drivetrain": "AWD",
+    "fuel_type": "Gasoline",
+    "body_style": "SUV",
+    "photos": [
+      "https://cdn.example.com/photos/veh-123-1.jpg",
+      "https://cdn.example.com/photos/veh-123-2.jpg"
+    ],
+    "has_description": true,
+    "updated_at": "2026-02-10T06:00:00.000Z"
+  }
+}
+```
+</ResponseExample>

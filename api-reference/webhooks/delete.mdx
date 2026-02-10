@@ -1,0 +1,18 @@
+---
+title: "Delete webhook"
+openapi: "DELETE /webhooks/{id}"
+description: "Delete a webhook subscription"
+---
+
+Permanently deletes a webhook subscription. This cannot be undone.
+
+**Scope required:** `webhooks:write`
+
+## Path parameters
+
+<ParamField path="id" type="string" required>UUID of the webhook subscription.</ParamField>
+
+<ResponseExample>
+```json 204
+```
+</ResponseExample>

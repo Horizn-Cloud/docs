@@ -1,0 +1,30 @@
+---
+title: "Get brand voices"
+openapi: "GET /site/brand-voices"
+description: "List brand voices available for this site"
+---
+
+Returns brand voices configured for this site. Brand voices control the tone and style of generated content.
+
+**Scope required:** `site:read`
+
+<ResponseExample>
+```json 200
+{
+  "data": [
+    {
+      "id": "bv-uuid-1",
+      "name": "Professional",
+      "description": "Formal and informative tone for dealership content",
+      "is_default": true
+    },
+    {
+      "id": "bv-uuid-2",
+      "name": "Conversational",
+      "description": "Friendly, approachable tone for blog-style content",
+      "is_default": false
+    }
+  ]
+}
+```
+</ResponseExample>

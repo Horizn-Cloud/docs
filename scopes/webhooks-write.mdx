@@ -1,0 +1,620 @@
+---
+title: "webhooks:write"
+description: "Create, update, delete, and test webhook subscriptions"
+---
+
+<code>webhooks:write</code>
+
+The `webhooks:write` scope allows you to manage webhook subscriptions — create new subscriptions, update existing ones, delete them, and send test pings. Webhooks deliver real-time event notifications to your server via HTTPS POST requests with HMAC-SHA256 signatures.
+
+## Endpoints
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `POST` | `/public/webhooks` | Create a webhook subscription |
+| `PATCH` | `/public/webhooks/{id}` | Update a webhook subscription |
+| `DELETE` | `/public/webhooks/{id}` | Delete a webhook subscription |
+| `POST` | `/public/webhooks/{id}/test` | Send a test ping |
+
+---
+
+## Create webhook subscription
+
+```
+POST /public/webhooks
+```
+
+Creates a new webhook subscription. The response includes a `secret` used for HMAC-SHA256 signature verification. Store this secret securely — it is only returned once at creation time.
+
+### Request body
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `url` | string | Yes | HTTPS URL to receive webhook payloads |
+| `events` | array of strings | Yes | Event types to subscribe to (min 1) |
+
+See [Webhook Events](/api-reference/reference/webhook-events) for all available event types.
+
+### Available event types
+
+| Event | Description |
+| --- | --- |
+| `ideacloud.completed` | IdeaCloud research finished |
+| `ideacloud.failed` | IdeaCloud research failed |
+| `article.completed` | Article generation finished |
+| `article.failed` | Article generation failed |
+| `compliance.completed` | Compliance check finished |
+| `content_tools.completed` | Content tools generation finished |
+| `inventory.description.completed` | Vehicle description generated |
+| `inventory.description.batch_completed` | Batch description generation finished |
+| `inventory.feed.updated` | Inventory feed refreshed from JDP sync |
+
+### Example
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://public-api.hrizn.io/public/webhooks \
+  -H "X-API-Key: hzk_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://partner.example.com/webhooks/hrizn",
+    "events": [
+      "ideacloud.completed",
+      "article.completed",
+      "compliance.completed"
+    ]
+  }'
+```
+
+```typescript TypeScript
+const response = await fetch("https://public-api.hrizn.io/public/webhooks", {
+  method: "POST",
+  headers: {
+    "X-API-Key": "hzk_your_key_here",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    url: "https://partner.example.com/webhooks/hrizn",
+    events: [
+      "ideacloud.completed",
+      "article.completed",
+      "compliance.completed",
+    ],
+  }),
+});
+
+const data = await response.json();
+console.log(data);
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://public-api.hrizn.io/public/webhooks",
+    headers={
+        "X-API-Key": "hzk_your_key_here",
+        "Content-Type": "application/json",
+    },
+    json={
+        "url": "https://partner.example.com/webhooks/hrizn",
+        "events": [
+            "ideacloud.completed",
+            "article.completed",
+            "compliance.completed",
+        ],
+    },
+)
+
+print(response.json())
+```
+
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/webhooks");
+
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_POST => true,
+    CURLOPT_HTTPHEADER => [
+        "X-API-Key: hzk_your_key_here",
+        "Content-Type: application/json",
+    ],
+    CURLOPT_POSTFIELDS => json_encode([
+        "url" => "https://partner.example.com/webhooks/hrizn",
+        "events" => [
+            "ideacloud.completed",
+            "article.completed",
+            "compliance.completed",
+        ],
+    ]),
+]);
+
+$response = curl_exec($ch);
+curl_close($ch);
+
+echo $response;
+```
+</CodeGroup>
+
+### Response — `201 Created`
+
+```json
+{
+  "data": {
+    "id": "wh-a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "url": "https://partner.example.com/webhooks/hrizn",
+    "events": [
+      "ideacloud.completed",
+      "article.completed",
+      "compliance.completed"
+    ],
+    "secret": "whsec_a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6",
+    "is_active": true,
+    "created_at": "2026-02-01T10:00:00Z"
+  }
+}
+```
+
+<Warning>
+The `secret` is only returned when the webhook is created. Store it securely. You will need it to verify webhook signatures. See [Webhook Verification](/webhooks#verifying-signatures) for details.
+</Warning>
+
+### Status codes
+
+| Code | Description |
+| --- | --- |
+| `201` | Webhook subscription created |
+| `400` | Validation error (invalid URL, missing events, URL not HTTPS) |
+| `401` | Missing or invalid API key |
+| `403` | API key does not have `webhooks:write` scope |
+| `429` | Rate limit exceeded |
+| `500` | Internal server error |
+
+---
+
+## Update webhook subscription
+
+```
+PATCH /public/webhooks/{id}
+```
+
+Updates an existing webhook subscription. You can change the URL, event list, or active/inactive status. Only include the fields you want to change.
+
+### Path parameters
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | string | Yes | Webhook subscription ID |
+
+### Request body
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `url` | string | No | New HTTPS URL for webhook delivery |
+| `events` | array of strings | No | New list of event types to subscribe to |
+| `is_active` | boolean | No | Enable or disable the webhook |
+
+### Example — Update URL and events
+
+<CodeGroup>
+```bash cURL
+curl -X PATCH https://public-api.hrizn.io/public/webhooks/wh-a1b2c3d4-e5f6-7890-abcd-ef1234567890 \
+  -H "X-API-Key: hzk_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://partner.example.com/webhooks/hrizn-v2",
+    "events": [
+      "ideacloud.completed",
+      "article.completed",
+      "compliance.completed",
+      "content_tools.completed"
+    ]
+  }'
+```
+
+```typescript TypeScript
+const response = await fetch(
+  "https://public-api.hrizn.io/public/webhooks/wh-a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  {
+    method: "PATCH",
+    headers: {
+      "X-API-Key": "hzk_your_key_here",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      url: "https://partner.example.com/webhooks/hrizn-v2",
+      events: [
+        "ideacloud.completed",
+        "article.completed",
+        "compliance.completed",
+        "content_tools.completed",
+      ],
+    }),
+  }
+);
+
+const data = await response.json();
+console.log(data);
+```
+
+```python Python
+import requests
+
+response = requests.patch(
+    "https://public-api.hrizn.io/public/webhooks/wh-a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    headers={
+        "X-API-Key": "hzk_your_key_here",
+        "Content-Type": "application/json",
+    },
+    json={
+        "url": "https://partner.example.com/webhooks/hrizn-v2",
+        "events": [
+            "ideacloud.completed",
+            "article.completed",
+            "compliance.completed",
+            "content_tools.completed",
+        ],
+    },
+)
+
+print(response.json())
+```
+
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/webhooks/wh-a1b2c3d4-e5f6-7890-abcd-ef1234567890");
+
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_CUSTOMREQUEST => "PATCH",
+    CURLOPT_HTTPHEADER => [
+        "X-API-Key: hzk_your_key_here",
+        "Content-Type: application/json",
+    ],
+    CURLOPT_POSTFIELDS => json_encode([
+        "url" => "https://partner.example.com/webhooks/hrizn-v2",
+        "events" => [
+            "ideacloud.completed",
+            "article.completed",
+            "compliance.completed",
+            "content_tools.completed",
+        ],
+    ]),
+]);
+
+$response = curl_exec($ch);
+curl_close($ch);
+
+echo $response;
+```
+</CodeGroup>
+
+### Response — `200 OK`
+
+```json
+{
+  "data": {
+    "id": "wh-a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "url": "https://partner.example.com/webhooks/hrizn-v2",
+    "events": [
+      "ideacloud.completed",
+      "article.completed",
+      "compliance.completed",
+      "content_tools.completed"
+    ],
+    "is_active": true,
+    "updated_at": "2026-02-01T12:00:00Z"
+  }
+}
+```
+
+### Example — Disable a webhook
+
+<CodeGroup>
+```bash cURL
+curl -X PATCH https://public-api.hrizn.io/public/webhooks/wh-a1b2c3d4-e5f6-7890-abcd-ef1234567890 \
+  -H "X-API-Key: hzk_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{ "is_active": false }'
+```
+
+```typescript TypeScript
+const response = await fetch(
+  "https://public-api.hrizn.io/public/webhooks/wh-a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  {
+    method: "PATCH",
+    headers: {
+      "X-API-Key": "hzk_your_key_here",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ is_active: false }),
+  }
+);
+
+const data = await response.json();
+console.log(data);
+```
+
+```python Python
+import requests
+
+response = requests.patch(
+    "https://public-api.hrizn.io/public/webhooks/wh-a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    headers={
+        "X-API-Key": "hzk_your_key_here",
+        "Content-Type": "application/json",
+    },
+    json={"is_active": False},
+)
+
+print(response.json())
+```
+
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/webhooks/wh-a1b2c3d4-e5f6-7890-abcd-ef1234567890");
+
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_CUSTOMREQUEST => "PATCH",
+    CURLOPT_HTTPHEADER => [
+        "X-API-Key: hzk_your_key_here",
+        "Content-Type: application/json",
+    ],
+    CURLOPT_POSTFIELDS => json_encode(["is_active" => false]),
+]);
+
+$response = curl_exec($ch);
+curl_close($ch);
+
+echo $response;
+```
+</CodeGroup>
+
+### Response — `200 OK`
+
+```json
+{
+  "data": {
+    "id": "wh-a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "url": "https://partner.example.com/webhooks/hrizn-v2",
+    "events": [
+      "ideacloud.completed",
+      "article.completed",
+      "compliance.completed",
+      "content_tools.completed"
+    ],
+    "is_active": false,
+    "updated_at": "2026-02-01T12:05:00Z"
+  }
+}
+```
+
+### Status codes
+
+| Code | Description |
+| --- | --- |
+| `200` | Webhook updated |
+| `400` | Validation error or webhook ID missing |
+| `401` | Missing or invalid API key |
+| `403` | API key does not have `webhooks:write` scope |
+| `404` | Webhook not found or belongs to a different site |
+| `500` | Internal server error |
+
+---
+
+## Delete webhook subscription
+
+```
+DELETE /public/webhooks/{id}
+```
+
+Permanently deletes a webhook subscription. This action cannot be undone.
+
+### Path parameters
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | string | Yes | Webhook subscription ID |
+
+### Example
+
+<CodeGroup>
+```bash cURL
+curl -X DELETE https://public-api.hrizn.io/public/webhooks/wh-a1b2c3d4-e5f6-7890-abcd-ef1234567890 \
+  -H "X-API-Key: hzk_your_key_here"
+```
+
+```typescript TypeScript
+const response = await fetch(
+  "https://public-api.hrizn.io/public/webhooks/wh-a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  {
+    method: "DELETE",
+    headers: {
+      "X-API-Key": "hzk_your_key_here",
+    },
+  }
+);
+
+if (response.status === 204) {
+  console.log("Webhook deleted");
+}
+```
+
+```python Python
+import requests
+
+response = requests.delete(
+    "https://public-api.hrizn.io/public/webhooks/wh-a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    headers={
+        "X-API-Key": "hzk_your_key_here",
+    },
+)
+
+print(response.status_code)  # 204
+```
+
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/webhooks/wh-a1b2c3d4-e5f6-7890-abcd-ef1234567890");
+
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_CUSTOMREQUEST => "DELETE",
+    CURLOPT_HTTPHEADER => [
+        "X-API-Key: hzk_your_key_here",
+    ],
+]);
+
+$response = curl_exec($ch);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
+
+echo $httpCode; // 204
+```
+</CodeGroup>
+
+### Response — `204 No Content`
+
+No response body.
+
+### Status codes
+
+| Code | Description |
+| --- | --- |
+| `204` | Webhook deleted |
+| `400` | Webhook ID is required |
+| `401` | Missing or invalid API key |
+| `403` | API key does not have `webhooks:write` scope |
+| `404` | Webhook not found or belongs to a different site |
+| `500` | Internal server error |
+
+---
+
+## Send test ping
+
+```
+POST /public/webhooks/{id}/test
+```
+
+Sends a test `test.ping` event to the webhook URL. The test delivery is performed synchronously and the response includes the HTTP status and body from your endpoint.
+
+### Path parameters
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | string | Yes | Webhook subscription ID |
+
+### Request body
+
+No request body is required.
+
+### Example
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://public-api.hrizn.io/public/webhooks/wh-a1b2c3d4-e5f6-7890-abcd-ef1234567890/test \
+  -H "X-API-Key: hzk_your_key_here"
+```
+
+```typescript TypeScript
+const response = await fetch(
+  "https://public-api.hrizn.io/public/webhooks/wh-a1b2c3d4-e5f6-7890-abcd-ef1234567890/test",
+  {
+    method: "POST",
+    headers: {
+      "X-API-Key": "hzk_your_key_here",
+    },
+  }
+);
+
+const data = await response.json();
+console.log(data);
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://public-api.hrizn.io/public/webhooks/wh-a1b2c3d4-e5f6-7890-abcd-ef1234567890/test",
+    headers={
+        "X-API-Key": "hzk_your_key_here",
+    },
+)
+
+print(response.json())
+```
+
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/webhooks/wh-a1b2c3d4-e5f6-7890-abcd-ef1234567890/test");
+
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_POST => true,
+    CURLOPT_HTTPHEADER => [
+        "X-API-Key: hzk_your_key_here",
+    ],
+]);
+
+$response = curl_exec($ch);
+curl_close($ch);
+
+echo $response;
+```
+</CodeGroup>
+
+### Response — `200 OK` (delivery successful)
+
+```json
+{
+  "data": {
+    "webhook_id": "wh-a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "delivered": true,
+    "response_status": 200,
+    "response_body": "{\"received\":true}"
+  }
+}
+```
+
+### Response — `200 OK` (delivery failed)
+
+```json
+{
+  "data": {
+    "webhook_id": "wh-a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "delivered": false,
+    "response_status": 503,
+    "error": "Service Unavailable"
+  }
+}
+```
+
+<Note>
+The webhook must be active and subscribed to the `test.ping` event for the test to succeed. If the webhook is inactive, a `400 Bad Request` error is returned.
+</Note>
+
+### Status codes
+
+| Code | Description |
+| --- | --- |
+| `200` | Test completed (check `delivered` field for result) |
+| `400` | Webhook ID missing, webhook is inactive, or not subscribed to test.ping |
+| `401` | Missing or invalid API key |
+| `403` | API key does not have `webhooks:write` scope |
+| `404` | Webhook not found or belongs to a different site |
+| `500` | Internal server error |
+
+---
+
+## Error response — Missing scope
+
+If your API key does not include `webhooks:write`, any request to these endpoints returns:
+
+```json
+{
+  "error": {
+    "code": "forbidden",
+    "message": "This API key requires one of the following scopes: webhooks:write",
+    "details": {
+      "required_scopes": ["webhooks:write"]
+    }
+  }
+}
+```

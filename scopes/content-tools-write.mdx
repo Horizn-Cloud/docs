@@ -1,0 +1,344 @@
+---
+title: "content_tools:write"
+description: "Generate SEO metadata, JSON-LD schemas, social snippets, and other content tools"
+---
+
+<code>content_tools:write</code>
+
+The `content_tools:write` scope allows you to generate supplementary content for articles — SEO metadata, structured data schemas, social media snippets, page slugs, post tags, and search intent analysis. You can generate all tools at once or target a specific tool.
+
+## Endpoints
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `POST` | `/public/articles/{id}/content-tools` | Generate all or selected content tools |
+| `POST` | `/public/articles/{id}/content-tools/{tool}` | Generate a single content tool |
+
+---
+
+## Available content tools
+
+| Tool | Description |
+| --- | --- |
+| `seo-metadata` | Page title, meta description, and keywords |
+| `schemas` | JSON-LD structured data (Article, Author, Organization, FAQ, etc.) |
+| `social-snippets` | Facebook, Twitter, Instagram, and Google Business snippets |
+| `page-slugs` | SEO-friendly URL slugs |
+| `post-tags` | Content categorization tags |
+| `search-intent` | Search intent analysis |
+
+---
+
+## Generate content tools
+
+```
+POST /public/articles/{id}/content-tools
+```
+
+Triggers generation for all content tools or a specified subset. Generation runs asynchronously. Use the [Get components](/scopes/articles-read#get-all-components) endpoint (requires `articles:read`) to check when each component is ready, or subscribe to the `content_tools.completed` webhook event.
+
+### Path parameters
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | string (UUID) | Yes | Article ID |
+
+### Request body (optional)
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `tools` | array of strings | No | Specific tools to generate. If omitted, default tools are generated |
+
+### Example — Generate all tools
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/content-tools \
+  -H "X-API-Key: hzk_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tools": ["seo-metadata", "schemas", "social-snippets", "page-slugs", "post-tags", "search-intent"]
+  }'
+```
+
+```typescript TypeScript
+const res = await fetch(
+  "https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/content-tools",
+  {
+    method: "POST",
+    headers: { "X-API-Key": "hzk_your_key_here", "Content-Type": "application/json" },
+    body: JSON.stringify({
+      tools: ["seo-metadata", "schemas", "social-snippets", "page-slugs", "post-tags", "search-intent"],
+    }),
+  }
+);
+const data = await res.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/content-tools",
+    headers={"X-API-Key": "hzk_your_key_here"},
+    json={"tools": ["seo-metadata", "schemas", "social-snippets", "page-slugs", "post-tags", "search-intent"]},
+)
+data = response.json()
+```
+
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/content-tools");
+curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_HTTPHEADER => ["X-API-Key: hzk_your_key_here", "Content-Type: application/json"],
+    CURLOPT_POSTFIELDS => json_encode(["tools" => ["seo-metadata", "schemas", "social-snippets", "page-slugs", "post-tags", "search-intent"]]),
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+### Response — `202 Accepted`
+
+```json
+{
+  "data": {
+    "article_id": "d4e5f6a7-b8c9-0123-def0-456789abcdef",
+    "tools": [
+      "seo-metadata",
+      "schemas",
+      "social-snippets",
+      "page-slugs",
+      "post-tags",
+      "search-intent"
+    ],
+    "status": "generating"
+  }
+}
+```
+
+### Example — Generate only SEO metadata and schemas
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/content-tools \
+  -H "X-API-Key: hzk_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tools": ["seo-metadata", "schemas"]
+  }'
+```
+
+```typescript TypeScript
+const res = await fetch(
+  "https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/content-tools",
+  {
+    method: "POST",
+    headers: { "X-API-Key": "hzk_your_key_here", "Content-Type": "application/json" },
+    body: JSON.stringify({
+      tools: ["seo-metadata", "schemas"],
+    }),
+  }
+);
+const data = await res.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/content-tools",
+    headers={"X-API-Key": "hzk_your_key_here"},
+    json={"tools": ["seo-metadata", "schemas"]},
+)
+data = response.json()
+```
+
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/content-tools");
+curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_HTTPHEADER => ["X-API-Key: hzk_your_key_here", "Content-Type: application/json"],
+    CURLOPT_POSTFIELDS => json_encode(["tools" => ["seo-metadata", "schemas"]]),
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+### Response — `202 Accepted`
+
+```json
+{
+  "data": {
+    "article_id": "d4e5f6a7-b8c9-0123-def0-456789abcdef",
+    "tools": ["seo-metadata", "schemas"],
+    "status": "generating"
+  }
+}
+```
+
+### Status codes
+
+| Code | Description |
+| --- | --- |
+| `202` | Content tool generation started |
+| `400` | Validation error (invalid tool name, article ID missing) |
+| `401` | Missing or invalid API key |
+| `403` | API key does not have `content_tools:write` scope |
+| `404` | Article not found or belongs to a different site |
+| `500` | Internal server error |
+
+---
+
+## Generate a single content tool
+
+```
+POST /public/articles/{id}/content-tools/{tool}
+```
+
+Shorthand endpoint to generate a single content tool by specifying it in the URL path.
+
+### Path parameters
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | string (UUID) | Yes | Article ID |
+| `tool` | string | Yes | The tool to generate (e.g. `seo-metadata`, `schemas`) |
+
+### Example
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/content-tools/seo-metadata \
+  -H "X-API-Key: hzk_your_key_here"
+```
+
+```typescript TypeScript
+const res = await fetch(
+  "https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/content-tools/seo-metadata",
+  {
+    method: "POST",
+    headers: { "X-API-Key": "hzk_your_key_here" },
+  }
+);
+const data = await res.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/content-tools/seo-metadata",
+    headers={"X-API-Key": "hzk_your_key_here"},
+)
+data = response.json()
+```
+
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/content-tools/seo-metadata");
+curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_HTTPHEADER => ["X-API-Key: hzk_your_key_here"],
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+### Response — `202 Accepted`
+
+```json
+{
+  "data": {
+    "article_id": "d4e5f6a7-b8c9-0123-def0-456789abcdef",
+    "tools": ["seo-metadata"],
+    "status": "generating"
+  }
+}
+```
+
+### Retrieving generated content tools
+
+Once generated, retrieve the components using the `articles:read` scope:
+
+<CodeGroup>
+```bash cURL
+curl https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/components/SeoMetadata \
+  -H "X-API-Key: hzk_your_key_here"
+```
+
+```typescript TypeScript
+const res = await fetch(
+  "https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/components/SeoMetadata",
+  { headers: { "X-API-Key": "hzk_your_key_here" } }
+);
+const data = await res.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/components/SeoMetadata",
+    headers={"X-API-Key": "hzk_your_key_here"},
+)
+data = response.json()
+```
+
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/components/SeoMetadata");
+curl_setopt_array($ch, [
+    CURLOPT_HTTPHEADER => ["X-API-Key: hzk_your_key_here"],
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+```json
+{
+  "data": {
+    "id": "comp-002-uuid",
+    "type": "SeoMetadata",
+    "content": {
+      "title": "2026 Honda Civic vs Toyota Corolla | Full Comparison",
+      "description": "Compare the 2026 Honda Civic and Toyota Corolla on price, fuel economy, and features.",
+      "keywords": ["honda civic", "toyota corolla", "2026", "comparison", "compact sedan"]
+    },
+    "metadata": {},
+    "status": "completed",
+    "created_at": "2026-02-01T15:25:00Z",
+    "updated_at": "2026-02-01T15:26:00Z"
+  }
+}
+```
+
+### Status codes
+
+| Code | Description |
+| --- | --- |
+| `202` | Content tool generation started |
+| `400` | Invalid tool name or article ID missing |
+| `401` | Missing or invalid API key |
+| `403` | API key does not have `content_tools:write` scope |
+| `404` | Article not found or belongs to a different site |
+| `500` | Internal server error |
+
+---
+
+## Error response — Missing scope
+
+If your API key does not include `content_tools:write`, any request to these endpoints returns:
+
+```json
+{
+  "error": {
+    "code": "forbidden",
+    "message": "This API key requires one of the following scopes: content_tools:write",
+    "details": {
+      "required_scopes": ["content_tools:write"]
+    }
+  }
+}
+```

@@ -1,0 +1,39 @@
+---
+title: "Generate descriptions (batch)"
+openapi: "POST /inventory/descriptions/batch"
+description: "Trigger description generation for up to 50 vehicles"
+---
+
+Queue AI description generation for multiple vehicles at once.
+
+**Scope required:** `inventory:write`
+
+## Request body
+
+<ParamField body="vehicle_ids" type="array" required>
+  Array of vehicle UUIDs (max 50).
+</ParamField>
+
+<ParamField body="brand_voice_id" type="string">
+  Optional brand voice to apply to all descriptions.
+</ParamField>
+
+<ParamField body="regenerate" type="boolean" default="false">
+  Overwrite existing descriptions.
+</ParamField>
+
+<ResponseExample>
+```json 202
+{
+  "data": {
+    "queued": 3,
+    "skipped": 0,
+    "items": [
+      { "vehicle_id": "veh-1", "status": "generating" },
+      { "vehicle_id": "veh-2", "status": "generating" },
+      { "vehicle_id": "veh-3", "status": "generating" }
+    ]
+  }
+}
+```
+</ResponseExample>

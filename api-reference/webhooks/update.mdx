@@ -1,0 +1,37 @@
+---
+title: "Update webhook"
+openapi: "PATCH /webhooks/{id}"
+description: "Update a webhook subscription"
+---
+
+Update the URL, events, active status, or description of a webhook subscription.
+
+**Scope required:** `webhooks:write`
+
+## Path parameters
+
+<ParamField path="id" type="string" required>UUID of the webhook subscription.</ParamField>
+
+## Request body
+
+All fields are optional. Only include fields you want to change.
+
+<ParamField body="url" type="string">New HTTPS endpoint URL.</ParamField>
+<ParamField body="events" type="array">New list of event types (replaces the existing list).</ParamField>
+<ParamField body="is_active" type="boolean">Enable or disable the webhook.</ParamField>
+<ParamField body="description" type="string">Updated description.</ParamField>
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "id": "wh-uuid-123",
+    "url": "https://your-app.com/webhooks/horizn",
+    "events": ["article.completed", "article.failed", "ideacloud.completed"],
+    "description": "Content pipeline webhook",
+    "is_active": true,
+    "updated_at": "2026-02-10T13:00:00.000Z"
+  }
+}
+```
+</ResponseExample>

@@ -1,0 +1,52 @@
+---
+title: "API reference"
+description: "Complete reference for all Hrizn Public API endpoints"
+---
+
+## Base URL
+
+```
+https://public-api.hrizn.io/public
+```
+
+## Authentication
+
+All endpoints (except `/health`) require an API key in the `X-API-Key` header.
+
+## Endpoint groups
+
+<CardGroup cols={2}>
+  <Card title="IdeaClouds" icon="cloud" href="/api-reference/ideaclouds/create">
+    Create and manage AI-powered keyword research. Start here to build content.
+  </Card>
+  <Card title="Articles" icon="file-lines" href="/api-reference/articles/create">
+    Generate articles from IdeaClouds. Retrieve HTML, components, and metadata.
+  </Card>
+  <Card title="Compliance" icon="shield-check" href="/api-reference/compliance/trigger">
+    Run OEM-specific compliance checks on articles.
+  </Card>
+  <Card title="Content tools" icon="wrench" href="/api-reference/content-tools/generate">
+    Generate SEO metadata, JSON-LD schemas, and social snippets.
+  </Card>
+  <Card title="Inventory" icon="car" href="/api-reference/inventory/list">
+    Access vehicle data, AI descriptions, and inventory feeds.
+  </Card>
+  <Card title="Site" icon="building" href="/api-reference/site/get">
+    Read dealership details, categories, brand voices, and elements.
+  </Card>
+  <Card title="Webhooks" icon="bell" href="/api-reference/webhooks/create">
+    Manage webhook subscriptions for real-time event delivery.
+  </Card>
+  <Card title="Reference" icon="book" href="/api-reference/reference/article-types">
+    Look up article types, component types, webhook events, and scopes.
+  </Card>
+</CardGroup>
+
+## Common headers
+
+| Header | Required | Description |
+| --- | --- | --- |
+| `X-API-Key` | Yes | Your API key |
+| `Content-Type` | For POST/PATCH | `application/json` |
+| `X-Idempotency-Key` | No | Prevent duplicate POST operations |
+| `Accept` | No | `application/json` (default) or `text/html` for HTML endpoints |

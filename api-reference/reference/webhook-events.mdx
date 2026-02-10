@@ -1,0 +1,25 @@
+---
+title: "Webhook events"
+openapi: "GET /reference/webhook-events"
+description: "List all webhook event types"
+---
+
+Returns all event types that can be subscribed to via [webhooks](/webhooks).
+
+<ResponseExample>
+```json 200
+{
+  "data": [
+    { "event": "ideacloud.completed", "description": "IdeaCloud research has finished" },
+    { "event": "ideacloud.failed", "description": "IdeaCloud research has failed" },
+    { "event": "article.completed", "description": "Article generation has finished" },
+    { "event": "article.failed", "description": "Article generation has failed" },
+    { "event": "compliance.completed", "description": "Compliance check has finished" },
+    { "event": "content_tools.completed", "description": "Content tools generation has finished" },
+    { "event": "inventory.description.completed", "description": "Vehicle description generation has finished" },
+    { "event": "inventory.feed.updated", "description": "Inventory feed sync has completed" },
+    { "event": "test.ping", "description": "Test event for verifying webhook delivery" }
+  ]
+}
+```
+</ResponseExample>

@@ -1,0 +1,47 @@
+---
+title: "Create webhook"
+openapi: "POST /webhooks"
+description: "Create a webhook subscription"
+---
+
+Subscribe to events by providing a URL that will receive `POST` requests when events occur. Each webhook is signed with HMAC-SHA256 for verification.
+
+**Scope required:** `webhooks:write`
+
+## Request body
+
+<ParamField body="url" type="string" required>
+  HTTPS endpoint URL that will receive webhook payloads.
+</ParamField>
+
+<ParamField body="events" type="array" required>
+  List of event types to subscribe to. See [Webhook events](/api-reference/reference/webhook-events) for all options.
+</ParamField>
+
+<ParamField body="description" type="string">
+  Optional description for this subscription.
+</ParamField>
+
+## Response
+
+Returns the subscription details including the signing `secret`. Save this secret - it is only shown once.
+
+<ResponseExample>
+```json 201
+{
+  "data": {
+    "id": "wh-uuid-123",
+    "url": "https://your-app.com/webhooks/horizn",
+    "events": ["article.completed", "ideacloud.completed"],
+    "description": "Content pipeline webhook",
+    "secret": "whsec_abc123...",
+    "is_active": true,
+    "created_at": "2026-02-10T12:00:00.000Z"
+  }
+}
+```
+</ResponseExample>
+
+<Warning>
+  Save the `secret` value immediately. It is only returned when the webhook is created and cannot be retrieved later. You will need it to verify incoming webhook signatures.
+</Warning>

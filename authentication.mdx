@@ -1,0 +1,112 @@
+---
+title: "Authentication"
+description: "How to authenticate with the Hrizn Public API"
+---
+
+The Hrizn Public API uses **API keys** for authentication. Each key is tied to a single dealership site, ensuring strict data isolation between tenants.
+
+## Getting an API Key
+
+<Steps>
+  <Step title="Open the Dealership Manager">
+    In the [Hrizn Dashboard](https://app.hrizn.io), navigate to the dealership you want to integrate with.
+  </Step>
+  <Step title="Go to the API tab">
+    Click the **API** tab in the dealership settings.
+  </Step>
+  <Step title="Create a new key">
+    Click **Create API Key**. Configure:
+    - **Name** - A descriptive label (e.g. "DSRPTV Production")
+    - **Scopes** - Which endpoints the key can access
+    - **Rate Limit** - Requests per minute (10-500)
+    - **Expiration** - Optional expiry date
+  </Step>
+  <Step title="Copy the key">
+    The raw key is displayed **once**. Copy and store it securely.
+  </Step>
+</Steps>
+
+## Using Your API Key
+
+Include the key in the `X-API-Key` header:
+
+<CodeGroup>
+```bash cURL
+curl https://public-api.hrizn.io/public/site \
+  -H "X-API-Key: hzk_your_key_here"
+```
+
+```javascript Node.js
+const response = await fetch('https://public-api.hrizn.io/public/site', {
+  headers: { 'X-API-Key': process.env.HORIZN_API_KEY },
+});
+const { data } = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://public-api.hrizn.io/public/site',
+    headers={'X-API-Key': 'hzk_your_key_here'}
+)
+data = response.json()['data']
+```
+</CodeGroup>
+
+## Key Format
+
+API keys follow the format:
+
+```
+hzk_<64 hex characters>
+```
+
+Example: `hzk_a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890`
+
+The first 12 characters (`hzk_a1b2c3d4`) are stored as the **key prefix** and visible in the dashboard for identification.
+
+## Key Security
+
+| Feature | Detail |
+| --- | --- |
+| **Storage** | Keys are SHA-256 hashed before storage. Hrizn never stores raw keys. |
+| **Display** | The raw key is returned exactly once at creation time. |
+| **Revocation** | Keys can be revoked instantly from the dashboard. |
+| **Expiration** | Keys can have optional expiry dates (30, 90, 180, 365 days). |
+| **Isolation** | Each key is bound to a single dealership site. |
+| **Rate Limits** | Each key has independent per-minute and per-day rate limits. |
+
+## Scope Presets
+
+Use these presets when creating keys, or select individual scopes:
+
+<AccordionGroup>
+  <Accordion title="Full Access">
+    All available scopes. Use for trusted, full-featured integrations.
+  </Accordion>
+  <Accordion title="Read Only">
+    `ideaclouds:read` `articles:read` `inventory:read` `site:read`
+
+    Read data without creating or modifying anything.
+  </Accordion>
+  <Accordion title="Content Generation">
+    `ideaclouds:read` `ideaclouds:write` `articles:read` `articles:write` `compliance:write` `content_tools:write` `site:read`
+
+    Full content creation workflow without inventory access.
+  </Accordion>
+  <Accordion title="Inventory Only">
+    `inventory:read` `inventory:write` `site:read`
+
+    Vehicle data and description generation only.
+  </Accordion>
+</AccordionGroup>
+
+## Error Responses
+
+| HTTP Status | Error Code | Meaning |
+| --- | --- | --- |
+| `401` | `unauthorized` | Missing or invalid API key |
+| `401` | `key_expired` | API key has passed its expiration date |
+| `401` | `key_revoked` | API key has been explicitly revoked |
+| `403` | `forbidden` | API key lacks the required scope for this endpoint |

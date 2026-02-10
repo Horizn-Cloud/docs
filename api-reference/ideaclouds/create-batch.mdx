@@ -1,0 +1,41 @@
+---
+title: "Create IdeaClouds (batch)"
+openapi: "POST /ideaclouds/batch"
+description: "Create up to 25 IdeaClouds in a single request"
+---
+
+Submit multiple keywords for research in one request. Each item is processed independently.
+
+**Scope required:** `ideaclouds:write`
+
+## Request body
+
+<ParamField body="items" type="array" required>
+  Array of IdeaCloud creation objects (max 25).
+  <Expandable title="Item properties">
+    <ParamField body="keyword" type="string" required>
+      The keyword or topic to research.
+    </ParamField>
+    <ParamField body="category_id" type="string">
+      Optional category UUID.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Response
+
+Returns `202 Accepted` with status for each item.
+
+<ResponseExample>
+```json 202
+{
+  "data": {
+    "items": [
+      { "id": "a1b2c3d4-...", "keyword": "2025 Honda CR-V reviews", "status": "researching" },
+      { "id": "b2c3d4e5-...", "keyword": "Honda CR-V vs Toyota RAV4", "status": "researching" },
+      { "id": "c3d4e5f6-...", "keyword": "best midsize SUV 2025", "status": "researching" }
+    ]
+  }
+}
+```
+</ResponseExample>

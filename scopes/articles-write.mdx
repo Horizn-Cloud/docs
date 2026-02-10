@@ -1,0 +1,575 @@
+---
+title: "articles:write"
+description: "Create articles and trigger generation from IdeaClouds"
+---
+
+<code>articles:write</code>
+
+The `articles:write` scope allows you to create articles from completed IdeaClouds and trigger article generation. Articles can be created in simple mode (fully automated) or interactive mode (you choose the questions and options before generation begins).
+
+## Endpoints
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `POST` | `/public/articles` | Create a single article |
+| `POST` | `/public/articles/batch` | Create articles in batch |
+| `POST` | `/public/articles/{id}/generate` | Generate an interactive-mode article |
+
+---
+
+## Create article
+
+```
+POST /public/articles
+```
+
+Creates a new article from a completed IdeaCloud. In `simple` mode, generation starts immediately. In `interactive` mode, the response includes the available inputs you need to provide before calling the [Generate](/scopes/articles-write#generate-interactive-mode-article) endpoint.
+
+### Request body
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `ideacloud_id` | string (UUID) | Yes | The IdeaCloud to generate the article from |
+| `article_type` | string | Yes | One of: `basic`, `qa`, `expert`, `modellanding`, `comparison`, `salesevent` |
+| `selected_question_ids` | array of UUIDs | No | Question IDs from the IdeaCloud to focus on (min 1 if provided) |
+| `brand_voice_id` | string | No | Brand voice ID to use for tone and style |
+| `title` | string | No | Custom article title (max 500 chars) |
+| `auto_compliance` | boolean | No | Automatically run compliance check after generation. Default `false` |
+| `auto_content_tools` | boolean | No | Automatically generate content tools after generation. Default `false` |
+| `mode` | string | No | `simple` (default) or `interactive` |
+
+### Example — Simple mode
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://public-api.hrizn.io/public/articles \
+  -H "X-API-Key: hzk_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ideacloud_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "article_type": "comparison",
+    "selected_question_ids": [
+      "q1a2b3c4-d5e6-7890-abcd-ef1234567890",
+      "q2b3c4d5-e6f7-8901-bcde-f12345678901"
+    ],
+    "auto_compliance": true,
+    "auto_content_tools": true
+  }'
+```
+
+```typescript TypeScript
+const res = await fetch("https://public-api.hrizn.io/public/articles", {
+  method: "POST",
+  headers: {
+    "X-API-Key": "hzk_your_key_here",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    ideacloud_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    article_type: "comparison",
+    selected_question_ids: [
+      "q1a2b3c4-d5e6-7890-abcd-ef1234567890",
+      "q2b3c4d5-e6f7-8901-bcde-f12345678901",
+    ],
+    auto_compliance: true,
+    auto_content_tools: true,
+  }),
+});
+const data = await res.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://public-api.hrizn.io/public/articles",
+    headers={"X-API-Key": "hzk_your_key_here"},
+    json={
+        "ideacloud_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "article_type": "comparison",
+        "selected_question_ids": [
+            "q1a2b3c4-d5e6-7890-abcd-ef1234567890",
+            "q2b3c4d5-e6f7-8901-bcde-f12345678901",
+        ],
+        "auto_compliance": True,
+        "auto_content_tools": True,
+    },
+)
+data = response.json()
+```
+
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/articles");
+curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_HTTPHEADER => [
+        "X-API-Key: hzk_your_key_here",
+        "Content-Type: application/json",
+    ],
+    CURLOPT_POSTFIELDS => json_encode([
+        "ideacloud_id" => "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "article_type" => "comparison",
+        "selected_question_ids" => [
+            "q1a2b3c4-d5e6-7890-abcd-ef1234567890",
+            "q2b3c4d5-e6f7-8901-bcde-f12345678901",
+        ],
+        "auto_compliance" => true,
+        "auto_content_tools" => true,
+    ]),
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+### Response — `202 Accepted` (simple mode)
+
+```json
+{
+  "data": {
+    "id": "d4e5f6a7-b8c9-0123-def0-456789abcdef",
+    "status": "generating",
+    "article_type": "comparison",
+    "title": "2026 Honda Civic vs Toyota Corolla: Complete Comparison",
+    "created_at": "2026-02-01T15:00:00Z"
+  }
+}
+```
+
+### Example — Interactive mode
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://public-api.hrizn.io/public/articles \
+  -H "X-API-Key: hzk_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ideacloud_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "article_type": "qa",
+    "mode": "interactive"
+  }'
+```
+
+```typescript TypeScript
+const res = await fetch("https://public-api.hrizn.io/public/articles", {
+  method: "POST",
+  headers: {
+    "X-API-Key": "hzk_your_key_here",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    ideacloud_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    article_type: "qa",
+    mode: "interactive",
+  }),
+});
+const data = await res.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://public-api.hrizn.io/public/articles",
+    headers={"X-API-Key": "hzk_your_key_here"},
+    json={
+        "ideacloud_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "article_type": "qa",
+        "mode": "interactive",
+    },
+)
+data = response.json()
+```
+
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/articles");
+curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_HTTPHEADER => [
+        "X-API-Key: hzk_your_key_here",
+        "Content-Type: application/json",
+    ],
+    CURLOPT_POSTFIELDS => json_encode([
+        "ideacloud_id" => "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "article_type" => "qa",
+        "mode" => "interactive",
+    ]),
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+### Response — `200 OK` (interactive mode)
+
+```json
+{
+  "data": {
+    "id": null,
+    "status": "awaiting_input",
+    "ideacloud_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "article_type": "qa",
+    "required_inputs": {
+      "selected_question_ids": {
+        "type": "array",
+        "required": true,
+        "options": [
+          {
+            "id": "q1a2b3c4-d5e6-7890-abcd-ef1234567890",
+            "question": "What is the starting price of the 2026 Honda Civic?"
+          },
+          {
+            "id": "q2b3c4d5-e6f7-8901-bcde-f12345678901",
+            "question": "How does the Corolla's fuel economy compare to the Civic?"
+          }
+        ]
+      },
+      "brand_voice_id": {
+        "type": "string",
+        "required": false
+      },
+      "title": {
+        "type": "string",
+        "required": false
+      }
+    }
+  }
+}
+```
+
+<Note>
+In interactive mode, no article is created yet. Use the `required_inputs` to build your follow-up request to the [Generate](/scopes/articles-write#generate-interactive-mode-article) endpoint.
+</Note>
+
+### Status codes
+
+| Code | Description |
+| --- | --- |
+| `200` | Interactive mode — awaiting input |
+| `202` | Simple mode — article created and generation started |
+| `400` | Validation error (missing or invalid fields) |
+| `401` | Missing or invalid API key |
+| `403` | API key does not have `articles:write` scope |
+| `404` | IdeaCloud not found |
+| `429` | Rate limit exceeded |
+| `500` | Internal server error |
+
+---
+
+## Create articles in batch
+
+```
+POST /public/articles/batch
+```
+
+Creates multiple articles in a single request. Each item is processed independently. Only `simple` mode is supported in batch requests.
+
+### Request body
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `items` | array | Yes | Array of article objects (1-10 items) |
+
+Each item accepts the same fields as the single [Create article](/scopes/articles-write#create-article) endpoint.
+
+### Example
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://public-api.hrizn.io/public/articles/batch \
+  -H "X-API-Key: hzk_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "items": [
+      {
+        "ideacloud_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "article_type": "comparison",
+        "auto_compliance": true
+      },
+      {
+        "ideacloud_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+        "article_type": "basic",
+        "auto_content_tools": true
+      }
+    ]
+  }'
+```
+
+```typescript TypeScript
+const res = await fetch("https://public-api.hrizn.io/public/articles/batch", {
+  method: "POST",
+  headers: {
+    "X-API-Key": "hzk_your_key_here",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    items: [
+      {
+        ideacloud_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        article_type: "comparison",
+        auto_compliance: true,
+      },
+      {
+        ideacloud_id: "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+        article_type: "basic",
+        auto_content_tools: true,
+      },
+    ],
+  }),
+});
+const data = await res.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://public-api.hrizn.io/public/articles/batch",
+    headers={"X-API-Key": "hzk_your_key_here"},
+    json={
+        "items": [
+            {
+                "ideacloud_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                "article_type": "comparison",
+                "auto_compliance": True,
+            },
+            {
+                "ideacloud_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+                "article_type": "basic",
+                "auto_content_tools": True,
+            },
+        ],
+    },
+)
+data = response.json()
+```
+
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/articles/batch");
+curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_HTTPHEADER => [
+        "X-API-Key: hzk_your_key_here",
+        "Content-Type: application/json",
+    ],
+    CURLOPT_POSTFIELDS => json_encode([
+        "items" => [
+            [
+                "ideacloud_id" => "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                "article_type" => "comparison",
+                "auto_compliance" => true,
+            ],
+            [
+                "ideacloud_id" => "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+                "article_type" => "basic",
+                "auto_content_tools" => true,
+            ],
+        ],
+    ]),
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+### Response — `202 Accepted`
+
+```json
+{
+  "data": {
+    "items": [
+      {
+        "id": "d4e5f6a7-b8c9-0123-def0-456789abcdef",
+        "status": "generating",
+        "article_type": "comparison",
+        "title": "2026 Honda Civic vs Toyota Corolla: Complete Comparison",
+        "created_at": "2026-02-01T15:00:00Z"
+      },
+      {
+        "id": "e5f6a7b8-c9d0-1234-ef01-56789abcdef0",
+        "status": "generating",
+        "article_type": "basic",
+        "title": "Top 10 Family SUVs for 2026",
+        "created_at": "2026-02-01T15:00:01Z"
+      }
+    ]
+  }
+}
+```
+
+### Response — Partial failure
+
+```json
+{
+  "data": {
+    "items": [
+      {
+        "id": "d4e5f6a7-b8c9-0123-def0-456789abcdef",
+        "status": "generating",
+        "article_type": "comparison",
+        "title": "2026 Honda Civic vs Toyota Corolla",
+        "created_at": "2026-02-01T15:00:00Z"
+      },
+      {
+        "article_type": "basic",
+        "status": "failed",
+        "error": "Failed to create article"
+      }
+    ]
+  }
+}
+```
+
+### Status codes
+
+| Code | Description |
+| --- | --- |
+| `202` | Batch accepted (check individual item statuses) |
+| `400` | Validation error (empty array, exceeds 10 items, or invalid fields) |
+| `401` | Missing or invalid API key |
+| `403` | API key does not have `articles:write` scope |
+| `429` | Rate limit exceeded |
+| `500` | Internal server error |
+
+---
+
+## Generate interactive-mode article
+
+```
+POST /public/articles/{id}/generate
+```
+
+Triggers generation for an article that was created in interactive mode. You must provide the required inputs returned by the [Create article](/scopes/articles-write#create-article) endpoint.
+
+### Path parameters
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | string (UUID) | Yes | Article ID (from the interactive-mode create response) |
+
+### Request body
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `selected_question_ids` | array of UUIDs | Yes | Question IDs to focus on (min 1) |
+| `brand_voice_id` | string | No | Brand voice ID |
+| `title` | string | No | Custom article title (max 500 chars) |
+
+### Example
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/generate \
+  -H "X-API-Key: hzk_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "selected_question_ids": [
+      "q1a2b3c4-d5e6-7890-abcd-ef1234567890",
+      "q2b3c4d5-e6f7-8901-bcde-f12345678901"
+    ],
+    "brand_voice_id": "bv-premium-001",
+    "title": "Honda Civic vs Toyota Corolla: Which Should You Buy?"
+  }'
+```
+
+```typescript TypeScript
+const res = await fetch(
+  "https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/generate",
+  {
+    method: "POST",
+    headers: {
+      "X-API-Key": "hzk_your_key_here",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      selected_question_ids: [
+        "q1a2b3c4-d5e6-7890-abcd-ef1234567890",
+        "q2b3c4d5-e6f7-8901-bcde-f12345678901",
+      ],
+      brand_voice_id: "bv-premium-001",
+      title: "Honda Civic vs Toyota Corolla: Which Should You Buy?",
+    }),
+  }
+);
+const data = await res.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/generate",
+    headers={"X-API-Key": "hzk_your_key_here"},
+    json={
+        "selected_question_ids": [
+            "q1a2b3c4-d5e6-7890-abcd-ef1234567890",
+            "q2b3c4d5-e6f7-8901-bcde-f12345678901",
+        ],
+        "brand_voice_id": "bv-premium-001",
+        "title": "Honda Civic vs Toyota Corolla: Which Should You Buy?",
+    },
+)
+data = response.json()
+```
+
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/generate");
+curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_HTTPHEADER => [
+        "X-API-Key: hzk_your_key_here",
+        "Content-Type: application/json",
+    ],
+    CURLOPT_POSTFIELDS => json_encode([
+        "selected_question_ids" => [
+            "q1a2b3c4-d5e6-7890-abcd-ef1234567890",
+            "q2b3c4d5-e6f7-8901-bcde-f12345678901",
+        ],
+        "brand_voice_id" => "bv-premium-001",
+        "title" => "Honda Civic vs Toyota Corolla: Which Should You Buy?",
+    ]),
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+### Response — `202 Accepted`
+
+```json
+{
+  "data": {
+    "id": "d4e5f6a7-b8c9-0123-def0-456789abcdef",
+    "status": "generating"
+  }
+}
+```
+
+### Status codes
+
+| Code | Description |
+| --- | --- |
+| `202` | Generation started |
+| `400` | Validation error (missing question IDs, article not in awaiting_input state) |
+| `401` | Missing or invalid API key |
+| `403` | API key does not have `articles:write` scope |
+| `404` | Article not found |
+| `500` | Internal server error |
+
+---
+
+## Error response — Missing scope
+
+If your API key does not include `articles:write`, any request to these endpoints returns:
+
+```json
+{
+  "error": {
+    "code": "forbidden",
+    "message": "This API key requires one of the following scopes: articles:write",
+    "details": {
+      "required_scopes": ["articles:write"]
+    }
+  }
+}
+```

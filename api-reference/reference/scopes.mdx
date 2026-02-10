@@ -1,0 +1,27 @@
+---
+title: "Scopes"
+openapi: "GET /reference/scopes"
+description: "List all API key scopes"
+---
+
+Returns the full list of scopes that can be assigned to API keys.
+
+<ResponseExample>
+```json 200
+{
+  "data": [
+    { "scope": "ideaclouds:read", "description": "List and view IdeaClouds and questions" },
+    { "scope": "ideaclouds:write", "description": "Create new IdeaClouds" },
+    { "scope": "articles:read", "description": "List and view articles, components, and HTML" },
+    { "scope": "articles:write", "description": "Create articles and trigger generation" },
+    { "scope": "compliance:write", "description": "Trigger compliance checks" },
+    { "scope": "content_tools:write", "description": "Generate SEO metadata, schemas, and social snippets" },
+    { "scope": "inventory:read", "description": "List and view vehicles, descriptions, and feeds" },
+    { "scope": "inventory:write", "description": "Trigger description generation" },
+    { "scope": "webhooks:read", "description": "View webhook subscriptions and delivery logs" },
+    { "scope": "webhooks:write", "description": "Create, update, and delete webhook subscriptions" },
+    { "scope": "site:read", "description": "View site details, categories, and configuration" }
+  ]
+}
+```
+</ResponseExample>

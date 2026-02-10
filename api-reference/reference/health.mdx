@@ -1,0 +1,17 @@
+---
+title: "Health check"
+openapi: "GET /health"
+description: "Check if the API is operational"
+---
+
+Returns the API status. This endpoint does not require authentication.
+
+<ResponseExample>
+```json 200
+{
+  "status": "ok",
+  "version": "1.0.0",
+  "timestamp": "2026-02-10T12:00:00.000Z"
+}
+```
+</ResponseExample>

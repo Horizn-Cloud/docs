@@ -1,0 +1,349 @@
+---
+title: "ideaclouds:read"
+description: "List and retrieve IdeaClouds, research questions, and question clusters"
+---
+
+<code>ideaclouds:read</code>
+
+The `ideaclouds:read` scope grants read-only access to IdeaClouds and their associated research data. Use this to list IdeaClouds, view their status, retrieve individual details, and access the questions and clusters produced during research.
+
+## Endpoints
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET` | `/public/ideaclouds` | List IdeaClouds |
+| `GET` | `/public/ideaclouds/{id}` | Get IdeaCloud details |
+| `GET` | `/public/ideaclouds/{id}/questions` | Get questions and clusters |
+
+---
+
+## List IdeaClouds
+
+```
+GET /public/ideaclouds
+```
+
+Returns a paginated list of IdeaClouds for your site.
+
+### Query parameters
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `limit` | integer | `25` | Number of results to return (1-100) |
+| `cursor` | string | — | Base64-encoded cursor from a previous response |
+| `status` | string | — | Filter by status (e.g. `researching`, `complete`, `failed`) |
+| `keyword` | string | — | Case-insensitive partial match on keyword |
+
+### Example
+
+<CodeGroup>
+```bash cURL
+curl "https://public-api.hrizn.io/public/ideaclouds?limit=10&status=complete" \
+  -H "X-API-Key: hzk_your_key_here"
+```
+
+```typescript TypeScript
+const res = await fetch(
+  "https://public-api.hrizn.io/public/ideaclouds?limit=10&status=complete",
+  { headers: { "X-API-Key": "hzk_your_key_here" } }
+);
+const data = await res.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://public-api.hrizn.io/public/ideaclouds",
+    headers={"X-API-Key": "hzk_your_key_here"},
+    params={"limit": 10, "status": "complete"},
+)
+data = response.json()
+```
+
+```php PHP
+$url = "https://public-api.hrizn.io/public/ideaclouds?" . http_build_query([
+    "limit" => 10, "status" => "complete",
+]);
+$ch = curl_init($url);
+curl_setopt_array($ch, [
+    CURLOPT_HTTPHEADER => ["X-API-Key: hzk_your_key_here"],
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+### Response — `200 OK`
+
+```json
+{
+  "data": [
+    {
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "keyword": "2026 Honda Civic vs Toyota Corolla",
+      "title": "Comparing the 2026 Civic and Corolla",
+      "synopsis": "A deep dive into how these compact sedans compare on pricing, features, and reliability.",
+      "status": "complete",
+      "category_id": "c9d8e7f6-5432-1098-abcd-fedcba987654",
+      "created_at": "2026-02-01T14:30:00Z",
+      "updated_at": "2026-02-01T14:35:22Z"
+    },
+    {
+      "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      "keyword": "best SUVs for families 2026",
+      "title": "Top Family SUVs for 2026",
+      "synopsis": "Research into the most popular family-friendly SUVs available this year.",
+      "status": "complete",
+      "category_id": null,
+      "created_at": "2026-02-01T13:00:00Z",
+      "updated_at": "2026-02-01T13:12:45Z"
+    }
+  ],
+  "pagination": {
+    "has_more": true,
+    "next_cursor": "eyJpZCI6ImIyYzNkNGU1LWY2YTctODkwMS1iY2RlLWYxMjM0NTY3ODkwMSJ9",
+    "total_count": 87
+  }
+}
+```
+
+### Status codes
+
+| Code | Description |
+| --- | --- |
+| `200` | Success |
+| `401` | Missing or invalid API key |
+| `403` | API key does not have `ideaclouds:read` scope |
+| `500` | Internal server error |
+
+---
+
+## Get IdeaCloud details
+
+```
+GET /public/ideaclouds/{id}
+```
+
+Returns full details for a single IdeaCloud.
+
+### Path parameters
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | string (UUID) | Yes | IdeaCloud ID |
+
+### Example
+
+<CodeGroup>
+```bash cURL
+curl https://public-api.hrizn.io/public/ideaclouds/a1b2c3d4-e5f6-7890-abcd-ef1234567890 \
+  -H "X-API-Key: hzk_your_key_here"
+```
+
+```typescript TypeScript
+const res = await fetch(
+  "https://public-api.hrizn.io/public/ideaclouds/a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  { headers: { "X-API-Key": "hzk_your_key_here" } }
+);
+const data = await res.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://public-api.hrizn.io/public/ideaclouds/a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    headers={"X-API-Key": "hzk_your_key_here"},
+)
+data = response.json()
+```
+
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/ideaclouds/a1b2c3d4-e5f6-7890-abcd-ef1234567890");
+curl_setopt_array($ch, [
+    CURLOPT_HTTPHEADER => ["X-API-Key: hzk_your_key_here"],
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+### Response — `200 OK`
+
+```json
+{
+  "data": {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "keyword": "2026 Honda Civic vs Toyota Corolla",
+    "title": "Comparing the 2026 Civic and Corolla",
+    "synopsis": "A deep dive into how these compact sedans compare on pricing, features, and reliability.",
+    "tags": ["honda", "civic", "toyota", "corolla", "comparison"],
+    "status": "complete",
+    "category_id": "c9d8e7f6-5432-1098-abcd-fedcba987654",
+    "recommended_question_ids": [
+      "q1a2b3c4-d5e6-7890-abcd-ef1234567890",
+      "q2b3c4d5-e6f7-8901-bcde-f12345678901"
+    ],
+    "created_at": "2026-02-01T14:30:00Z",
+    "updated_at": "2026-02-01T14:35:22Z"
+  }
+}
+```
+
+### Status codes
+
+| Code | Description |
+| --- | --- |
+| `200` | Success |
+| `400` | IdeaCloud ID is required |
+| `401` | Missing or invalid API key |
+| `403` | API key does not have `ideaclouds:read` scope |
+| `404` | IdeaCloud not found or belongs to a different site |
+| `500` | Internal server error |
+
+---
+
+## Get questions and clusters
+
+```
+GET /public/ideaclouds/{id}/questions
+```
+
+Returns the research questions and clusters for an IdeaCloud. If research is still in progress, the questions array will be empty and a status message is included.
+
+### Path parameters
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | string (UUID) | Yes | IdeaCloud ID |
+
+### Example
+
+<CodeGroup>
+```bash cURL
+curl https://public-api.hrizn.io/public/ideaclouds/a1b2c3d4-e5f6-7890-abcd-ef1234567890/questions \
+  -H "X-API-Key: hzk_your_key_here"
+```
+
+```typescript TypeScript
+const res = await fetch(
+  "https://public-api.hrizn.io/public/ideaclouds/a1b2c3d4-e5f6-7890-abcd-ef1234567890/questions",
+  { headers: { "X-API-Key": "hzk_your_key_here" } }
+);
+const data = await res.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://public-api.hrizn.io/public/ideaclouds/a1b2c3d4-e5f6-7890-abcd-ef1234567890/questions",
+    headers={"X-API-Key": "hzk_your_key_here"},
+)
+data = response.json()
+```
+
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/ideaclouds/a1b2c3d4-e5f6-7890-abcd-ef1234567890/questions");
+curl_setopt_array($ch, [
+    CURLOPT_HTTPHEADER => ["X-API-Key: hzk_your_key_here"],
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+### Response — `200 OK` (research complete)
+
+```json
+{
+  "data": {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "status": "complete",
+    "questions": [
+      {
+        "id": "q1a2b3c4-d5e6-7890-abcd-ef1234567890",
+        "question": "What is the starting price of the 2026 Honda Civic?",
+        "cluster_id": "cl-pricing-001",
+        "intent": "informational",
+        "source_url": "https://example.com/article",
+        "source_title": "2026 Civic Pricing Guide",
+        "is_recommended": true
+      },
+      {
+        "id": "q2b3c4d5-e6f7-8901-bcde-f12345678901",
+        "question": "How does the Corolla's fuel economy compare to the Civic?",
+        "cluster_id": "cl-efficiency-002",
+        "intent": "comparison",
+        "source_url": null,
+        "source_title": null,
+        "is_recommended": true
+      }
+    ],
+    "clusters": [
+      {
+        "id": "cl-pricing-001",
+        "label": "Pricing and Value",
+        "question_count": 8
+      },
+      {
+        "id": "cl-efficiency-002",
+        "label": "Fuel Economy and Efficiency",
+        "question_count": 5
+      }
+    ],
+    "recommended_question_ids": [
+      "q1a2b3c4-d5e6-7890-abcd-ef1234567890",
+      "q2b3c4d5-e6f7-8901-bcde-f12345678901"
+    ]
+  }
+}
+```
+
+### Response — `200 OK` (research in progress)
+
+```json
+{
+  "data": {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "status": "researching",
+    "questions": [],
+    "clusters": [],
+    "message": "IdeaCloud research is still in progress"
+  }
+}
+```
+
+<Note>
+Poll this endpoint to check when research completes. Once `status` is `"complete"`, the `questions` and `clusters` arrays will be populated. You can also subscribe to the `ideacloud.completed` webhook event instead of polling.
+</Note>
+
+### Status codes
+
+| Code | Description |
+| --- | --- |
+| `200` | Success (check `status` field for readiness) |
+| `400` | IdeaCloud ID is required |
+| `401` | Missing or invalid API key |
+| `403` | API key does not have `ideaclouds:read` scope |
+| `404` | IdeaCloud not found or belongs to a different site |
+| `500` | Internal server error |
+
+---
+
+## Error response — Missing scope
+
+If your API key does not include `ideaclouds:read`, any request to these endpoints returns:
+
+```json
+{
+  "error": {
+    "code": "forbidden",
+    "message": "This API key requires one of the following scopes: ideaclouds:read",
+    "details": {
+      "required_scopes": ["ideaclouds:read"]
+    }
+  }
+}
+```

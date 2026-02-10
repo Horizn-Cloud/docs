@@ -1,0 +1,506 @@
+---
+title: "site:read"
+description: "View site details, categories, brand voices, elements, and article types"
+---
+
+<code>site:read</code>
+
+The `site:read` scope provides read-only access to your site's configuration and metadata. This includes the site profile, content categories, brand voices, site elements, and available article types. This information is useful for populating forms, validating inputs, and understanding your site's content structure.
+
+## Endpoints
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET` | `/public/site` | Get site details |
+| `GET` | `/public/site/categories` | List categories |
+| `GET` | `/public/site/brand-voices` | List brand voices |
+| `GET` | `/public/site/elements` | List site elements |
+| `GET` | `/public/site/article-types` | List article types |
+
+---
+
+## Get site details
+
+```
+GET /public/site
+```
+
+Returns your site's profile information including name, domain, platform, and location.
+
+### Example
+
+<CodeGroup>
+```bash cURL
+curl https://public-api.hrizn.io/public/site \
+  -H "X-API-Key: hzk_your_key_here"
+```
+
+```typescript TypeScript
+const res = await fetch("https://public-api.hrizn.io/public/site", {
+  headers: { "X-API-Key": "hzk_your_key_here" },
+});
+const data = await res.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://public-api.hrizn.io/public/site",
+    headers={"X-API-Key": "hzk_your_key_here"},
+)
+data = response.json()
+```
+
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/site");
+curl_setopt_array($ch, [
+    CURLOPT_HTTPHEADER => ["X-API-Key: hzk_your_key_here"],
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+### Response — `200 OK`
+
+```json
+{
+  "data": {
+    "id": "site-a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "Metro Honda Downtown",
+    "domain": "www.metrohondadowntown.com",
+    "platform": "dealer_com",
+    "oem": "Honda",
+    "state": "CA",
+    "city": "Los Angeles",
+    "zip": "90001",
+    "created_at": "2025-06-15T08:00:00Z",
+    "updated_at": "2026-01-30T12:00:00Z"
+  }
+}
+```
+
+### Status codes
+
+| Code | Description |
+| --- | --- |
+| `200` | Success |
+| `401` | Missing or invalid API key |
+| `403` | API key does not have `site:read` scope |
+| `404` | Site not found |
+| `500` | Internal server error |
+
+---
+
+## List categories
+
+```
+GET /public/site/categories
+```
+
+Returns all content categories configured for your site. Categories are used to organize IdeaClouds and articles.
+
+### Example
+
+<CodeGroup>
+```bash cURL
+curl https://public-api.hrizn.io/public/site/categories \
+  -H "X-API-Key: hzk_your_key_here"
+```
+
+```typescript TypeScript
+const res = await fetch("https://public-api.hrizn.io/public/site/categories", {
+  headers: { "X-API-Key": "hzk_your_key_here" },
+});
+const data = await res.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://public-api.hrizn.io/public/site/categories",
+    headers={"X-API-Key": "hzk_your_key_here"},
+)
+data = response.json()
+```
+
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/site/categories");
+curl_setopt_array($ch, [
+    CURLOPT_HTTPHEADER => ["X-API-Key: hzk_your_key_here"],
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+### Response — `200 OK`
+
+```json
+{
+  "data": {
+    "categories": [
+      {
+        "id": "cat-001-uuid",
+        "name": "Model Research",
+        "slug": "model-research",
+        "description": "In-depth research pages for specific vehicle models",
+        "article_count": 45
+      },
+      {
+        "id": "cat-002-uuid",
+        "name": "Comparisons",
+        "slug": "comparisons",
+        "description": "Side-by-side vehicle comparisons",
+        "article_count": 23
+      },
+      {
+        "id": "cat-003-uuid",
+        "name": "Sales Events",
+        "slug": "sales-events",
+        "description": "Seasonal and promotional event pages",
+        "article_count": 12
+      }
+    ]
+  }
+}
+```
+
+### Status codes
+
+| Code | Description |
+| --- | --- |
+| `200` | Success |
+| `401` | Missing or invalid API key |
+| `403` | API key does not have `site:read` scope |
+| `500` | Internal server error |
+
+---
+
+## List brand voices
+
+```
+GET /public/site/brand-voices
+```
+
+Returns all brand voices configured for your site. Brand voices control the tone, style, and personality used in AI-generated content.
+
+### Example
+
+<CodeGroup>
+```bash cURL
+curl https://public-api.hrizn.io/public/site/brand-voices \
+  -H "X-API-Key: hzk_your_key_here"
+```
+
+```typescript TypeScript
+const res = await fetch("https://public-api.hrizn.io/public/site/brand-voices", {
+  headers: { "X-API-Key": "hzk_your_key_here" },
+});
+const data = await res.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://public-api.hrizn.io/public/site/brand-voices",
+    headers={"X-API-Key": "hzk_your_key_here"},
+)
+data = response.json()
+```
+
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/site/brand-voices");
+curl_setopt_array($ch, [
+    CURLOPT_HTTPHEADER => ["X-API-Key: hzk_your_key_here"],
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+### Response — `200 OK`
+
+```json
+{
+  "data": {
+    "brand_voices": [
+      {
+        "id": "bv-001-uuid",
+        "name": "Professional",
+        "description": "Formal, authoritative tone suitable for model research and comparison pages",
+        "is_default": true,
+        "created_at": "2025-06-15T08:00:00Z"
+      },
+      {
+        "id": "bv-002-uuid",
+        "name": "Conversational",
+        "description": "Friendly, approachable tone ideal for blog posts and Q&A articles",
+        "is_default": false,
+        "created_at": "2025-08-01T10:00:00Z"
+      },
+      {
+        "id": "bv-003-uuid",
+        "name": "Sales Event",
+        "description": "Energetic, promotional tone for sales events and special offers",
+        "is_default": false,
+        "created_at": "2025-09-15T14:00:00Z"
+      }
+    ]
+  }
+}
+```
+
+### Status codes
+
+| Code | Description |
+| --- | --- |
+| `200` | Success |
+| `401` | Missing or invalid API key |
+| `403` | API key does not have `site:read` scope |
+| `500` | Internal server error |
+
+---
+
+## List site elements
+
+```
+GET /public/site/elements
+```
+
+Returns site elements such as disclaimers, CTAs, and other reusable content blocks. Optionally filter by element type.
+
+### Query parameters
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `type` | string | — | Filter by element type |
+
+### Example
+
+<CodeGroup>
+```bash cURL
+curl https://public-api.hrizn.io/public/site/elements \
+  -H "X-API-Key: hzk_your_key_here"
+```
+
+```typescript TypeScript
+const res = await fetch("https://public-api.hrizn.io/public/site/elements", {
+  headers: { "X-API-Key": "hzk_your_key_here" },
+});
+const data = await res.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://public-api.hrizn.io/public/site/elements",
+    headers={"X-API-Key": "hzk_your_key_here"},
+)
+data = response.json()
+```
+
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/site/elements");
+curl_setopt_array($ch, [
+    CURLOPT_HTTPHEADER => ["X-API-Key: hzk_your_key_here"],
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+### Response — `200 OK`
+
+```json
+{
+  "data": {
+    "elements": [
+      {
+        "id": "el-001-uuid",
+        "type": "disclaimer",
+        "content": "All prices listed are MSRP. Final price may vary based on dealer options and availability.",
+        "created_at": "2025-06-15T08:00:00Z",
+        "updated_at": "2026-01-10T09:00:00Z"
+      },
+      {
+        "id": "el-002-uuid",
+        "type": "cta",
+        "content": "Schedule a test drive today! Call us at (213) 555-0100 or visit our showroom.",
+        "created_at": "2025-06-15T08:00:00Z",
+        "updated_at": "2025-12-01T11:00:00Z"
+      },
+      {
+        "id": "el-003-uuid",
+        "type": "footer",
+        "content": "Metro Honda Downtown | 123 Main St, Los Angeles, CA 90001",
+        "created_at": "2025-06-15T08:00:00Z",
+        "updated_at": "2025-06-15T08:00:00Z"
+      }
+    ]
+  }
+}
+```
+
+### Example — Filter by type
+
+<CodeGroup>
+```bash cURL
+curl "https://public-api.hrizn.io/public/site/elements?type=disclaimer" \
+  -H "X-API-Key: hzk_your_key_here"
+```
+
+```typescript TypeScript
+const res = await fetch("https://public-api.hrizn.io/public/site/elements?type=disclaimer", {
+  headers: { "X-API-Key": "hzk_your_key_here" },
+});
+const data = await res.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://public-api.hrizn.io/public/site/elements",
+    headers={"X-API-Key": "hzk_your_key_here"},
+    params={"type": "disclaimer"},
+)
+data = response.json()
+```
+
+```php PHP
+$url = "https://public-api.hrizn.io/public/site/elements?" . http_build_query(["type" => "disclaimer"]);
+$ch = curl_init($url);
+curl_setopt_array($ch, [
+    CURLOPT_HTTPHEADER => ["X-API-Key: hzk_your_key_here"],
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+### Status codes
+
+| Code | Description |
+| --- | --- |
+| `200` | Success |
+| `401` | Missing or invalid API key |
+| `403` | API key does not have `site:read` scope |
+| `500` | Internal server error |
+
+---
+
+## List article types
+
+```
+GET /public/site/article-types
+```
+
+Returns all article types available for your site. Use these values when creating articles.
+
+### Example
+
+<CodeGroup>
+```bash cURL
+curl https://public-api.hrizn.io/public/site/article-types \
+  -H "X-API-Key: hzk_your_key_here"
+```
+
+```typescript TypeScript
+const res = await fetch("https://public-api.hrizn.io/public/site/article-types", {
+  headers: { "X-API-Key": "hzk_your_key_here" },
+});
+const data = await res.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://public-api.hrizn.io/public/site/article-types",
+    headers={"X-API-Key": "hzk_your_key_here"},
+)
+data = response.json()
+```
+
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/site/article-types");
+curl_setopt_array($ch, [
+    CURLOPT_HTTPHEADER => ["X-API-Key: hzk_your_key_here"],
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+### Response — `200 OK`
+
+```json
+{
+  "data": {
+    "article_types": [
+      {
+        "id": "basic",
+        "label": "Standard Article",
+        "description": "Standard article"
+      },
+      {
+        "id": "qa",
+        "label": "Q&A Article",
+        "description": "Q&A interview article"
+      },
+      {
+        "id": "expert",
+        "label": "Expert Opinion",
+        "description": "Expert opinion article"
+      },
+      {
+        "id": "modellanding",
+        "label": "Model Research Page",
+        "description": "Model research page"
+      },
+      {
+        "id": "comparison",
+        "label": "Vehicle Comparison",
+        "description": "Vehicle comparison article"
+      },
+      {
+        "id": "salesevent",
+        "label": "Sales Event Page",
+        "description": "Sales event promotional page"
+      }
+    ]
+  }
+}
+```
+
+### Status codes
+
+| Code | Description |
+| --- | --- |
+| `200` | Success |
+| `401` | Missing or invalid API key |
+| `403` | API key does not have `site:read` scope |
+| `500` | Internal server error |
+
+---
+
+## Error response — Missing scope
+
+If your API key does not include `site:read`, any request to these endpoints returns:
+
+```json
+{
+  "error": {
+    "code": "forbidden",
+    "message": "This API key requires one of the following scopes: site:read",
+    "details": {
+      "required_scopes": ["site:read"]
+    }
+  }
+}
+```

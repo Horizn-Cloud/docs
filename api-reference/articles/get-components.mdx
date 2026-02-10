@@ -1,0 +1,52 @@
+---
+title: "Get article components"
+openapi: "GET /articles/{id}/components"
+description: "Get all components or a specific component type"
+---
+
+Returns article components (body, SEO metadata, schemas, social snippets, etc.). Optionally filter by component type.
+
+**Scope required:** `articles:read`
+
+## Path parameters
+
+<ParamField path="id" type="string" required>UUID of the article.</ParamField>
+
+## Optional path
+
+Append `/{type}` to get a single component type:
+
+```
+GET /articles/{id}/components/SeoMetadata
+```
+
+See [Component types](/api-reference/reference/component-types) for all available types.
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "components": [
+      {
+        "id": "comp-1",
+        "type": "Body",
+        "content": "<h2>2025 Honda CR-V</h2><p>...</p>",
+        "metadata": null,
+        "status": "Complete",
+        "created_at": "2026-02-10T12:10:00.000Z",
+        "updated_at": "2026-02-10T12:15:00.000Z"
+      },
+      {
+        "id": "comp-2",
+        "type": "SeoMetadata",
+        "content": { "title": "...", "description": "...", "keywords": [] },
+        "metadata": null,
+        "status": "Complete",
+        "created_at": "2026-02-10T12:16:00.000Z",
+        "updated_at": "2026-02-10T12:16:00.000Z"
+      }
+    ]
+  }
+}
+```
+</ResponseExample>

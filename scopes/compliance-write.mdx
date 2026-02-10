@@ -1,0 +1,177 @@
+---
+title: "compliance:write"
+description: "Trigger OEM compliance checks on generated articles"
+---
+
+<code>compliance:write</code>
+
+The `compliance:write` scope allows you to trigger compliance checks on articles. Compliance checks verify that article content meets OEM guidelines and advertising regulations. The check runs asynchronously — use the [Get compliance report](/scopes/articles-read#get-compliance-report) endpoint (requires `articles:read`) or the `compliance.completed` webhook event to retrieve results.
+
+## Endpoints
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `POST` | `/public/articles/{id}/compliance` | Trigger a compliance check |
+
+---
+
+## Trigger compliance check
+
+```
+POST /public/articles/{id}/compliance
+```
+
+Starts an asynchronous compliance check on the specified article. The check evaluates the article's content against OEM compliance rules and dealership advertising guidelines.
+
+### Path parameters
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | string (UUID) | Yes | Article ID |
+
+### Request body
+
+No request body is required.
+
+### Example
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/compliance \
+  -H "X-API-Key: hzk_your_key_here"
+```
+
+```typescript TypeScript
+const res = await fetch(
+  "https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/compliance",
+  {
+    method: "POST",
+    headers: { "X-API-Key": "hzk_your_key_here" },
+  }
+);
+const data = await res.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/compliance",
+    headers={"X-API-Key": "hzk_your_key_here"},
+)
+data = response.json()
+```
+
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/compliance");
+curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_HTTPHEADER => ["X-API-Key: hzk_your_key_here"],
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+### Response — `202 Accepted`
+
+```json
+{
+  "data": {
+    "article_id": "d4e5f6a7-b8c9-0123-def0-456789abcdef",
+    "status": "checking"
+  }
+}
+```
+
+<Tip>
+You can skip this manual step by setting `auto_compliance: true` when creating articles. The compliance check will run automatically once generation completes.
+</Tip>
+
+### Retrieving the compliance report
+
+Once the check completes, retrieve the report using the `articles:read` scope:
+
+<CodeGroup>
+```bash cURL
+curl https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/compliance \
+  -H "X-API-Key: hzk_your_key_here"
+```
+
+```typescript TypeScript
+const res = await fetch(
+  "https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/compliance",
+  { headers: { "X-API-Key": "hzk_your_key_here" } }
+);
+const data = await res.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/compliance",
+    headers={"X-API-Key": "hzk_your_key_here"},
+)
+data = response.json()
+```
+
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/compliance");
+curl_setopt_array($ch, [
+    CURLOPT_HTTPHEADER => ["X-API-Key: hzk_your_key_here"],
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+```json
+{
+  "data": {
+    "article_id": "d4e5f6a7-b8c9-0123-def0-456789abcdef",
+    "status": "completed",
+    "report": {
+      "score": 92,
+      "issues": [
+        {
+          "severity": "warning",
+          "rule": "pricing_accuracy",
+          "message": "Price mentioned may be outdated",
+          "location": "paragraph 3"
+        }
+      ],
+      "checked_at": "2026-02-01T15:30:00Z"
+    }
+  }
+}
+```
+
+### Status codes
+
+| Code | Description |
+| --- | --- |
+| `202` | Compliance check started |
+| `400` | Article ID is required |
+| `401` | Missing or invalid API key |
+| `403` | API key does not have `compliance:write` scope |
+| `404` | Article not found or belongs to a different site |
+| `500` | Internal server error |
+
+---
+
+## Error response — Missing scope
+
+If your API key does not include `compliance:write`, any request to this endpoint returns:
+
+```json
+{
+  "error": {
+    "code": "forbidden",
+    "message": "This API key requires one of the following scopes: compliance:write",
+    "details": {
+      "required_scopes": ["compliance:write"]
+    }
+  }
+}
+```

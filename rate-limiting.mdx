@@ -1,0 +1,89 @@
+---
+title: "Rate Limiting"
+description: "Understand and work with API rate limits"
+---
+
+Every API key has configurable rate limits to protect the platform and ensure fair usage.
+
+## How It Works
+
+Rate limiting uses a **sliding window** algorithm tracked per API key:
+
+- **Per-minute limit** - Maximum requests in any rolling 60-second window
+- **Per-day limit** - Maximum requests in any rolling 24-hour window
+
+Both limits are enforced independently. If either is exceeded, requests return `429 Too Many Requests`.
+
+## Rate Limit Headers
+
+Every response includes rate limit information:
+
+| Header | Description |
+| --- | --- |
+| `X-RateLimit-Limit` | Maximum requests per minute for this key |
+| `X-RateLimit-Remaining` | Remaining requests in the current minute window |
+| `X-RateLimit-Reset` | Unix timestamp when the minute window resets |
+
+## Handling Rate Limits
+
+When you exceed the limit, you'll receive:
+
+```json
+{
+  "error": {
+    "code": "rate_limit_exceeded",
+    "message": "Rate limit exceeded. Retry after 12 seconds.",
+    "details": {
+      "retry_after": 12
+    }
+  }
+}
+```
+
+The response also includes a `Retry-After` header with the number of seconds to wait.
+
+### Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Respect Retry-After" icon="clock">
+    Always wait the number of seconds specified in the `Retry-After` header before retrying.
+  </Card>
+  <Card title="Exponential Backoff" icon="arrow-up-right-dots">
+    If you continue hitting limits, implement exponential backoff with jitter.
+  </Card>
+  <Card title="Use Batch Endpoints" icon="layer-group">
+    For bulk operations, use batch endpoints (`/ideaclouds/batch`, `/articles/batch`) to reduce request count.
+  </Card>
+  <Card title="Monitor Headers" icon="chart-line">
+    Track `X-RateLimit-Remaining` and throttle proactively before hitting the limit.
+  </Card>
+</CardGroup>
+
+## Default Limits
+
+| Plan | Per Minute | Per Day |
+| --- | --- | --- |
+| Default | 60 | 10,000 |
+| Custom | Up to 500 | Up to 100,000 |
+
+Rate limits are configured per API key when creating the key in the Dealership Manager.
+
+## Example: Retry Logic
+
+```javascript
+async function apiCallWithRetry(url, options, maxRetries = 3) {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const response = await fetch(url, options);
+
+    if (response.status === 429) {
+      const retryAfter = parseInt(response.headers.get('Retry-After') || '5');
+      console.log(`Rate limited. Retrying in ${retryAfter}s...`);
+      await new Promise(r => setTimeout(r, retryAfter * 1000));
+      continue;
+    }
+
+    return response;
+  }
+  throw new Error('Max retries exceeded');
+}
+```

@@ -1,0 +1,38 @@
+---
+title: "Generate content tools"
+openapi: "POST /articles/{id}/content-tools"
+description: "Generate SEO metadata, schemas, and social snippets for an article"
+---
+
+Triggers generation of SEO metadata (title, description, keywords), JSON-LD schema markup, and social media snippets (Open Graph, Twitter) for a completed article.
+
+**Scope required:** `content_tools:write`
+
+## Path parameters
+
+<ParamField path="article_id" type="string" required>UUID of a completed article.</ParamField>
+
+## Request body
+
+<ParamField body="tools" type="array">
+  Specific tools to generate. Defaults to all available tools.
+
+  Options: `seo_metadata`, `json_ld_schema`, `social_snippets`
+</ParamField>
+
+<ResponseExample>
+```json 202
+{
+  "data": {
+    "article_id": "art-uuid-123",
+    "status": "generating",
+    "tools": ["seo_metadata", "json_ld_schema", "social_snippets"],
+    "queued_at": "2026-02-10T12:22:00.000Z"
+  }
+}
+```
+</ResponseExample>
+
+<Note>
+  Content tools results are available as article components. Use [Get article components](/api-reference/articles/get-components) to retrieve them.
+</Note>

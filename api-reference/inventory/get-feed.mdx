@@ -1,0 +1,31 @@
+---
+title: "Get feed status"
+openapi: "GET /inventory/feed"
+description: "Get inventory feed sync status"
+---
+
+Returns the current status of the site's inventory feed, including last sync time and vehicle counts.
+
+**Scope required:** `inventory:read`
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "feed_provider": "jdp",
+    "last_sync_at": "2026-02-10T06:00:00.000Z",
+    "next_sync_at": "2026-02-11T06:00:00.000Z",
+    "vehicle_count": {
+      "total": 245,
+      "new": 120,
+      "used": 125
+    },
+    "description_coverage": {
+      "with_description": 198,
+      "without_description": 47,
+      "percentage": 80.8
+    }
+  }
+}
+```
+</ResponseExample>

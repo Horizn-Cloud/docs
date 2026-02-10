@@ -1,0 +1,616 @@
+---
+title: "articles:read"
+description: "List and retrieve articles, HTML content, components, and compliance reports"
+---
+
+<code>articles:read</code>
+
+The `articles:read` scope grants read-only access to articles and their associated data. This includes listing articles, viewing individual article details, retrieving rendered HTML, accessing component data, and viewing compliance reports.
+
+## Endpoints
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET` | `/public/articles` | List articles |
+| `GET` | `/public/articles/{id}` | Get article details |
+| `GET` | `/public/articles/{id}/html` | Get rendered HTML |
+| `GET` | `/public/articles/{id}/components` | Get all components |
+| `GET` | `/public/articles/{id}/compliance` | Get compliance report |
+
+---
+
+## List articles
+
+```
+GET /public/articles
+```
+
+Returns a paginated list of articles for your site.
+
+### Query parameters
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `limit` | integer | `25` | Number of results to return (1-100) |
+| `cursor` | string | — | Base64-encoded cursor from a previous response |
+| `article_type` | string | — | Filter by article type (e.g. `basic`, `qa`, `expert`) |
+
+### Example
+
+<CodeGroup>
+```bash cURL
+curl "https://public-api.hrizn.io/public/articles?limit=10&article_type=basic" \
+  -H "X-API-Key: hzk_your_key_here"
+```
+
+```typescript TypeScript
+const res = await fetch(
+  "https://public-api.hrizn.io/public/articles?limit=10&article_type=basic",
+  { headers: { "X-API-Key": "hzk_your_key_here" } }
+);
+const data = await res.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://public-api.hrizn.io/public/articles",
+    headers={"X-API-Key": "hzk_your_key_here"},
+    params={"limit": 10, "article_type": "basic"},
+)
+data = response.json()
+```
+
+```php PHP
+$query = http_build_query(["limit" => 10, "article_type" => "basic"]);
+$ch = curl_init("https://public-api.hrizn.io/public/articles?" . $query);
+curl_setopt_array($ch, [
+    CURLOPT_HTTPHEADER => ["X-API-Key: hzk_your_key_here"],
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+### Response — `200 OK`
+
+```json
+{
+  "data": [
+    {
+      "id": "d4e5f6a7-b8c9-0123-def0-456789abcdef",
+      "title": "2026 Honda Civic vs Toyota Corolla: Complete Comparison",
+      "article_type": "comparison",
+      "status": "completed",
+      "created_at": "2026-02-01T15:00:00Z",
+      "updated_at": "2026-02-01T15:25:30Z"
+    },
+    {
+      "id": "e5f6a7b8-c9d0-1234-ef01-56789abcdef0",
+      "title": "Top 10 Family SUVs for 2026",
+      "article_type": "basic",
+      "status": "generating",
+      "created_at": "2026-02-01T15:10:00Z",
+      "updated_at": "2026-02-01T15:10:00Z"
+    }
+  ],
+  "pagination": {
+    "has_more": true,
+    "next_cursor": "eyJpZCI6ImU1ZjZhN2I4LWM5ZDAtMTIzNC1lZjAxLTU2Nzg5YWJjZGVmMCJ9",
+    "total_count": 234
+  }
+}
+```
+
+### Status codes
+
+| Code | Description |
+| --- | --- |
+| `200` | Success |
+| `401` | Missing or invalid API key |
+| `403` | API key does not have `articles:read` scope |
+| `500` | Internal server error |
+
+---
+
+## Get article details
+
+```
+GET /public/articles/{id}
+```
+
+Returns full details for a single article including its component summary.
+
+### Path parameters
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | string (UUID) | Yes | Article ID |
+
+### Example
+
+<CodeGroup>
+```bash cURL
+curl https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef \
+  -H "X-API-Key: hzk_your_key_here"
+```
+
+```typescript TypeScript
+const res = await fetch(
+  "https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef",
+  { headers: { "X-API-Key": "hzk_your_key_here" } }
+);
+const data = await res.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef",
+    headers={"X-API-Key": "hzk_your_key_here"},
+)
+data = response.json()
+```
+
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef");
+curl_setopt_array($ch, [
+    CURLOPT_HTTPHEADER => ["X-API-Key: hzk_your_key_here"],
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+### Response — `200 OK`
+
+```json
+{
+  "data": {
+    "id": "d4e5f6a7-b8c9-0123-def0-456789abcdef",
+    "title": "2026 Honda Civic vs Toyota Corolla: Complete Comparison",
+    "article_type": "comparison",
+    "metadata": {
+      "word_count": 1850,
+      "reading_time_minutes": 7
+    },
+    "components": [
+      {
+        "type": "Body",
+        "status": "completed",
+        "updated_at": "2026-02-01T15:25:30Z"
+      },
+      {
+        "type": "SeoMetadata",
+        "status": "completed",
+        "updated_at": "2026-02-01T15:26:00Z"
+      },
+      {
+        "type": "ArticleSchema",
+        "status": "completed",
+        "updated_at": "2026-02-01T15:26:05Z"
+      }
+    ],
+    "created_at": "2026-02-01T15:00:00Z",
+    "updated_at": "2026-02-01T15:26:05Z"
+  }
+}
+```
+
+### Status codes
+
+| Code | Description |
+| --- | --- |
+| `200` | Success |
+| `400` | Article ID is required |
+| `401` | Missing or invalid API key |
+| `403` | API key does not have `articles:read` scope |
+| `404` | Article not found or belongs to a different site |
+| `500` | Internal server error |
+
+---
+
+## Get rendered HTML
+
+```
+GET /public/articles/{id}/html
+```
+
+Returns the article's body content as HTML. By default the response is wrapped in a JSON envelope. Send `Accept: text/html` to receive raw HTML.
+
+### Path parameters
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | string (UUID) | Yes | Article ID |
+
+### Example — JSON response
+
+<CodeGroup>
+```bash cURL
+curl https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/html \
+  -H "X-API-Key: hzk_your_key_here"
+```
+
+```typescript TypeScript
+const res = await fetch(
+  "https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/html",
+  { headers: { "X-API-Key": "hzk_your_key_here" } }
+);
+const data = await res.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/html",
+    headers={"X-API-Key": "hzk_your_key_here"},
+)
+data = response.json()
+```
+
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/html");
+curl_setopt_array($ch, [
+    CURLOPT_HTTPHEADER => ["X-API-Key: hzk_your_key_here"],
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+### Response — `200 OK` (JSON)
+
+```json
+{
+  "data": {
+    "id": "d4e5f6a7-b8c9-0123-def0-456789abcdef",
+    "html": "<h1>2026 Honda Civic vs Toyota Corolla</h1><p>When it comes to choosing between these two compact sedans...</p>",
+    "component_status": "completed",
+    "updated_at": "2026-02-01T15:25:30Z"
+  }
+}
+```
+
+### Example — Raw HTML response
+
+<CodeGroup>
+```bash cURL
+curl https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/html \
+  -H "X-API-Key: hzk_your_key_here" \
+  -H "Accept: text/html"
+```
+
+```typescript TypeScript
+const res = await fetch(
+  "https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/html",
+  {
+    headers: {
+      "X-API-Key": "hzk_your_key_here",
+      "Accept": "text/html",
+    },
+  }
+);
+const html = await res.text();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/html",
+    headers={"X-API-Key": "hzk_your_key_here", "Accept": "text/html"},
+)
+html = response.text
+```
+
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/html");
+curl_setopt_array($ch, [
+    CURLOPT_HTTPHEADER => [
+        "X-API-Key: hzk_your_key_here",
+        "Accept: text/html",
+    ],
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$html = curl_exec($ch);
+```
+</CodeGroup>
+
+Returns raw HTML with `Content-Type: text/html`.
+
+### Status codes
+
+| Code | Description |
+| --- | --- |
+| `200` | Success |
+| `400` | Article ID is required |
+| `401` | Missing or invalid API key |
+| `403` | API key does not have `articles:read` scope |
+| `404` | Article not found or body component not available |
+| `500` | Internal server error |
+
+---
+
+## Get all components
+
+```
+GET /public/articles/{id}/components
+```
+
+Returns all generated components for an article, or a single component if a type is specified.
+
+### Path parameters
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | string (UUID) | Yes | Article ID |
+
+To retrieve a single component, append the type to the path:
+
+```
+GET /public/articles/{id}/components/{type}
+```
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `type` | string | No | Component type (e.g. `Body`, `SeoMetadata`, `ArticleSchema`) |
+
+See [Component Types](/api-reference/reference/component-types) for all available types.
+
+### Example — All components
+
+<CodeGroup>
+```bash cURL
+curl https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/components \
+  -H "X-API-Key: hzk_your_key_here"
+```
+
+```typescript TypeScript
+const res = await fetch(
+  "https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/components",
+  { headers: { "X-API-Key": "hzk_your_key_here" } }
+);
+const data = await res.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/components",
+    headers={"X-API-Key": "hzk_your_key_here"},
+)
+data = response.json()
+```
+
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/components");
+curl_setopt_array($ch, [
+    CURLOPT_HTTPHEADER => ["X-API-Key: hzk_your_key_here"],
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+### Response — `200 OK` (all components)
+
+```json
+{
+  "data": {
+    "components": [
+      {
+        "id": "comp-001-uuid",
+        "type": "Body",
+        "content": {
+          "html": "<h1>2026 Honda Civic vs Toyota Corolla</h1><p>...</p>"
+        },
+        "metadata": {},
+        "status": "completed",
+        "created_at": "2026-02-01T15:20:00Z",
+        "updated_at": "2026-02-01T15:25:30Z"
+      },
+      {
+        "id": "comp-002-uuid",
+        "type": "SeoMetadata",
+        "content": {
+          "title": "2026 Honda Civic vs Toyota Corolla | Full Comparison",
+          "description": "Compare the 2026 Honda Civic and Toyota Corolla side by side.",
+          "keywords": ["honda civic", "toyota corolla", "2026", "comparison"]
+        },
+        "metadata": {},
+        "status": "completed",
+        "created_at": "2026-02-01T15:25:00Z",
+        "updated_at": "2026-02-01T15:26:00Z"
+      }
+    ]
+  }
+}
+```
+
+### Example — Single component
+
+<CodeGroup>
+```bash cURL
+curl https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/components/SeoMetadata \
+  -H "X-API-Key: hzk_your_key_here"
+```
+
+```typescript TypeScript
+const res = await fetch(
+  "https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/components/SeoMetadata",
+  { headers: { "X-API-Key": "hzk_your_key_here" } }
+);
+const data = await res.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/components/SeoMetadata",
+    headers={"X-API-Key": "hzk_your_key_here"},
+)
+data = response.json()
+```
+
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/components/SeoMetadata");
+curl_setopt_array($ch, [
+    CURLOPT_HTTPHEADER => ["X-API-Key: hzk_your_key_here"],
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+### Response — `200 OK` (single component)
+
+```json
+{
+  "data": {
+    "id": "comp-002-uuid",
+    "type": "SeoMetadata",
+    "content": {
+      "title": "2026 Honda Civic vs Toyota Corolla | Full Comparison",
+      "description": "Compare the 2026 Honda Civic and Toyota Corolla side by side.",
+      "keywords": ["honda civic", "toyota corolla", "2026", "comparison"]
+    },
+    "metadata": {},
+    "status": "completed",
+    "created_at": "2026-02-01T15:25:00Z",
+    "updated_at": "2026-02-01T15:26:00Z"
+  }
+}
+```
+
+### Status codes
+
+| Code | Description |
+| --- | --- |
+| `200` | Success |
+| `400` | Article ID is required |
+| `401` | Missing or invalid API key |
+| `403` | API key does not have `articles:read` scope |
+| `404` | Article or component type not found |
+| `500` | Internal server error |
+
+---
+
+## Get compliance report
+
+```
+GET /public/articles/{id}/compliance
+```
+
+Returns the compliance check report for an article. If no check has been run, the status is `not_checked`.
+
+### Path parameters
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | string (UUID) | Yes | Article ID |
+
+### Example
+
+<CodeGroup>
+```bash cURL
+curl https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/compliance \
+  -H "X-API-Key: hzk_your_key_here"
+```
+
+```typescript TypeScript
+const res = await fetch(
+  "https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/compliance",
+  { headers: { "X-API-Key": "hzk_your_key_here" } }
+);
+const data = await res.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/compliance",
+    headers={"X-API-Key": "hzk_your_key_here"},
+)
+data = response.json()
+```
+
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/articles/d4e5f6a7-b8c9-0123-def0-456789abcdef/compliance");
+curl_setopt_array($ch, [
+    CURLOPT_HTTPHEADER => ["X-API-Key: hzk_your_key_here"],
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+### Response — `200 OK` (check completed)
+
+```json
+{
+  "data": {
+    "article_id": "d4e5f6a7-b8c9-0123-def0-456789abcdef",
+    "status": "completed",
+    "report": {
+      "score": 92,
+      "issues": [
+        {
+          "severity": "warning",
+          "rule": "pricing_accuracy",
+          "message": "Price mentioned may be outdated",
+          "location": "paragraph 3"
+        }
+      ],
+      "checked_at": "2026-02-01T15:30:00Z"
+    }
+  }
+}
+```
+
+### Response — `200 OK` (not checked)
+
+```json
+{
+  "data": {
+    "article_id": "d4e5f6a7-b8c9-0123-def0-456789abcdef",
+    "status": "not_checked",
+    "report": null
+  }
+}
+```
+
+### Status codes
+
+| Code | Description |
+| --- | --- |
+| `200` | Success |
+| `400` | Article ID is required |
+| `401` | Missing or invalid API key |
+| `403` | API key does not have `articles:read` scope |
+| `404` | Article not found or belongs to a different site |
+| `500` | Internal server error |
+
+---
+
+## Error response — Missing scope
+
+If your API key does not include `articles:read`, any request to these endpoints returns:
+
+```json
+{
+  "error": {
+    "code": "forbidden",
+    "message": "This API key requires one of the following scopes: articles:read",
+    "details": {
+      "required_scopes": ["articles:read"]
+    }
+  }
+}
+```

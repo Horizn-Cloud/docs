@@ -1,0 +1,35 @@
+---
+title: "Generate description"
+openapi: "POST /inventory/{vin}/description"
+description: "Trigger AI description generation for a vehicle"
+---
+
+Queues AI description generation for a specific vehicle.
+
+**Scope required:** `inventory:write`
+
+## Path parameters
+
+<ParamField path="id" type="string" required>UUID of the vehicle.</ParamField>
+
+## Request body
+
+<ParamField body="brand_voice_id" type="string">
+  Optional brand voice to apply.
+</ParamField>
+
+<ParamField body="regenerate" type="boolean" default="false">
+  Set to `true` to overwrite an existing description.
+</ParamField>
+
+<ResponseExample>
+```json 202
+{
+  "data": {
+    "vehicle_id": "veh-uuid-123",
+    "status": "generating",
+    "queued_at": "2026-02-10T12:30:00.000Z"
+  }
+}
+```
+</ResponseExample>

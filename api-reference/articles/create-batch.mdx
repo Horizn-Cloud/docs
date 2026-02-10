@@ -1,0 +1,28 @@
+---
+title: "Create articles (batch)"
+openapi: "POST /articles/batch"
+description: "Create up to 10 articles in a single request"
+---
+
+Submit multiple article creation requests at once. Each item is processed independently.
+
+**Scope required:** `articles:write`
+
+## Request body
+
+<ParamField body="items" type="array" required>
+  Array of article creation objects (max 10). Each item accepts the same fields as [Create article](/api-reference/articles/create).
+</ParamField>
+
+<ResponseExample>
+```json 202
+{
+  "data": {
+    "items": [
+      { "id": "art-1-...", "status": "generating", "article_type": "basic" },
+      { "id": "art-2-...", "status": "generating", "article_type": "qa" }
+    ]
+  }
+}
+```
+</ResponseExample>

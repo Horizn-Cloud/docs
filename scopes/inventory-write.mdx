@@ -1,0 +1,253 @@
+---
+title: "inventory:write"
+description: "Trigger AI description generation for individual vehicles or in batch"
+---
+
+<code>inventory:write</code>
+
+The `inventory:write` scope allows you to trigger AI-powered description generation for vehicles in your inventory. You can generate a description for a single vehicle by VIN or submit a batch of up to 50 VINs at once.
+
+## Endpoints
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `POST` | `/public/inventory/{vin}/description` | Generate description for a single vehicle |
+| `POST` | `/public/inventory/descriptions/batch` | Generate descriptions in batch |
+
+---
+
+## Generate description
+
+```
+POST /public/inventory/{vin}/description
+```
+
+Triggers AI description generation for a specific vehicle. The process runs asynchronously. Use the [Get AI description](/scopes/inventory-read#get-ai-description) endpoint or the `inventory.description.completed` webhook event to check when the description is ready.
+
+### Path parameters
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `vin` | string | Yes | Vehicle Identification Number |
+
+### Request body
+
+No request body is required.
+
+### Example
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://public-api.hrizn.io/public/inventory/1HGBH41JXMN109186/description \
+  -H "X-API-Key: hzk_your_key_here"
+```
+```typescript TypeScript
+const res = await fetch("https://public-api.hrizn.io/public/inventory/1HGBH41JXMN109186/description", {
+  method: "POST",
+  headers: { "X-API-Key": "hzk_your_key_here" },
+});
+const data = await res.json();
+```
+```python Python
+import requests
+
+response = requests.post(
+    "https://public-api.hrizn.io/public/inventory/1HGBH41JXMN109186/description",
+    headers={"X-API-Key": "hzk_your_key_here"},
+)
+data = response.json()
+```
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/inventory/1HGBH41JXMN109186/description");
+curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_HTTPHEADER => ["X-API-Key: hzk_your_key_here"],
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+### Response — `202 Accepted`
+
+```json
+{
+  "data": {
+    "vin": "1HGBH41JXMN109186",
+    "status": "generating"
+  }
+}
+```
+
+### Status codes
+
+| Code | Description |
+| --- | --- |
+| `202` | Description generation started |
+| `400` | VIN is required |
+| `401` | Missing or invalid API key |
+| `403` | API key does not have `inventory:write` scope |
+| `404` | Vehicle not found or belongs to a different site |
+| `429` | Rate limit exceeded |
+| `500` | Internal server error |
+
+---
+
+## Generate descriptions in batch
+
+```
+POST /public/inventory/descriptions/batch
+```
+
+Triggers AI description generation for multiple vehicles in a single request. Each VIN is processed independently — if one fails, the others still succeed.
+
+### Request body
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `vins` | array of strings | Yes | VINs to generate descriptions for (1-50 items, each 11-17 characters) |
+
+### Example
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://public-api.hrizn.io/public/inventory/descriptions/batch \
+  -H "X-API-Key: hzk_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "vins": [
+      "1HGBH41JXMN109186",
+      "2T1BU4EE5DC012345",
+      "5YJSA1E26MF123456"
+    ]
+  }'
+```
+```typescript TypeScript
+const res = await fetch("https://public-api.hrizn.io/public/inventory/descriptions/batch", {
+  method: "POST",
+  headers: {
+    "X-API-Key": "hzk_your_key_here",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    vins: [
+      "1HGBH41JXMN109186",
+      "2T1BU4EE5DC012345",
+      "5YJSA1E26MF123456",
+    ],
+  }),
+});
+const data = await res.json();
+```
+```python Python
+import requests
+
+response = requests.post(
+    "https://public-api.hrizn.io/public/inventory/descriptions/batch",
+    headers={"X-API-Key": "hzk_your_key_here"},
+    json={
+        "vins": [
+            "1HGBH41JXMN109186",
+            "2T1BU4EE5DC012345",
+            "5YJSA1E26MF123456",
+        ]
+    },
+)
+data = response.json()
+```
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/inventory/descriptions/batch");
+curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_HTTPHEADER => [
+        "X-API-Key: hzk_your_key_here",
+        "Content-Type: application/json",
+    ],
+    CURLOPT_POSTFIELDS => json_encode([
+        "vins" => [
+            "1HGBH41JXMN109186",
+            "2T1BU4EE5DC012345",
+            "5YJSA1E26MF123456",
+        ],
+    ]),
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+### Response — `202 Accepted`
+
+```json
+{
+  "data": {
+    "items": [
+      {
+        "vin": "1HGBH41JXMN109186",
+        "status": "generating"
+      },
+      {
+        "vin": "2T1BU4EE5DC012345",
+        "status": "generating"
+      },
+      {
+        "vin": "5YJSA1E26MF123456",
+        "status": "generating"
+      }
+    ]
+  }
+}
+```
+
+### Response — Partial failure
+
+```json
+{
+  "data": {
+    "items": [
+      {
+        "vin": "1HGBH41JXMN109186",
+        "status": "generating"
+      },
+      {
+        "vin": "INVALIDVIN123",
+        "status": "failed",
+        "error": "Vehicle not found or generation failed"
+      }
+    ]
+  }
+}
+```
+
+<Note>
+Failed items will have `status: "failed"` with an `error` message. This does not affect the other items in the batch.
+</Note>
+
+### Status codes
+
+| Code | Description |
+| --- | --- |
+| `202` | Batch accepted (check individual item statuses) |
+| `400` | Validation error (empty array, exceeds 50 VINs, or invalid VIN format) |
+| `401` | Missing or invalid API key |
+| `403` | API key does not have `inventory:write` scope |
+| `429` | Rate limit exceeded |
+| `500` | Internal server error |
+
+---
+
+## Error response — Missing scope
+
+If your API key does not include `inventory:write`, any request to these endpoints returns:
+
+```json
+{
+  "error": {
+    "code": "forbidden",
+    "message": "This API key requires one of the following scopes: inventory:write",
+    "details": {
+      "required_scopes": ["inventory:write"]
+    }
+  }
+}
+```

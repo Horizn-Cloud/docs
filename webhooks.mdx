@@ -1,0 +1,148 @@
+---
+title: "Webhooks"
+description: "Receive real-time notifications when content is ready"
+---
+
+Instead of polling for status, webhooks push events to your server as they happen.
+
+## How It Works
+
+1. Register a webhook URL and select which events to subscribe to
+2. When an event occurs, Hrizn sends an HTTP POST to your URL
+3. Your server verifies the HMAC signature and processes the payload
+4. If delivery fails, Hrizn retries with exponential backoff
+
+## Setting Up Webhooks
+
+### Via the Dashboard
+
+Go to the **API** tab in the Dealership Manager, switch to the **Webhooks** section, and click **Add Webhook**.
+
+### Via the API
+
+```bash
+curl -X POST https://public-api.hrizn.io/public/webhooks \
+  -H "X-API-Key: hzk_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://your-server.com/webhooks/horizn",
+    "events": ["article.completed", "ideacloud.completed"]
+  }'
+```
+
+The response includes a `secret` for verifying signatures. **Store it securely** - it is only returned once.
+
+## Event Payload
+
+Every webhook delivery sends a JSON payload:
+
+```json
+{
+  "id": "evt_1707000000000_abc1234",
+  "type": "article.completed",
+  "site_id": "550e8400-e29b-41d4-a716-446655440000",
+  "data": {
+    "article_id": "a1b2c3d4-...",
+    "article_type": "basic"
+  },
+  "timestamp": "2026-02-10T12:00:00.000Z",
+  "api_version": "2025-01-01"
+}
+```
+
+## Verifying Signatures
+
+Every delivery includes an `X-Webhook-Signature` header with an HMAC-SHA256 signature of the request body:
+
+```
+X-Webhook-Signature: sha256=abc123def456...
+```
+
+<CodeGroup>
+```javascript Node.js
+const crypto = require('crypto');
+
+function verifyWebhookSignature(body, signature, secret) {
+  const expected = crypto
+    .createHmac('sha256', secret)
+    .update(body)
+    .digest('hex');
+  return `sha256=${expected}` === signature;
+}
+
+// Express middleware
+app.post('/webhooks/horizn', (req, res) => {
+  const signature = req.headers['x-webhook-signature'];
+  const isValid = verifyWebhookSignature(req.rawBody, signature, WEBHOOK_SECRET);
+
+  if (!isValid) {
+    return res.status(401).send('Invalid signature');
+  }
+
+  const event = JSON.parse(req.rawBody);
+  console.log(`Received: ${event.type}`, event.data);
+
+  // Return 200 quickly to acknowledge receipt
+  res.status(200).send('OK');
+});
+```
+
+```python Python
+import hmac
+import hashlib
+
+def verify_signature(body: bytes, signature: str, secret: str) -> bool:
+    expected = hmac.new(
+        secret.encode(), body, hashlib.sha256
+    ).hexdigest()
+    return f"sha256={expected}" == signature
+```
+</CodeGroup>
+
+## Available Events
+
+| Event | Description | Payload Data |
+| --- | --- | --- |
+| `ideacloud.completed` | IdeaCloud research finished | `ideacloud_id`, `keyword` |
+| `ideacloud.failed` | IdeaCloud research failed | `ideacloud_id`, `keyword`, `error` |
+| `article.completed` | Article generation finished | `article_id`, `article_type` |
+| `article.failed` | Article generation failed | `article_id`, `article_type`, `error` |
+| `compliance.completed` | Compliance check finished | `article_id`, `overall_status`, `overall_score` |
+| `content_tools.completed` | Content tools generated | `article_id`, `tools` |
+| `inventory.description.completed` | Vehicle description generated | `vin`, `year`, `make`, `model` |
+| `inventory.description.batch_completed` | Batch descriptions finished | `count`, `site_id` |
+| `inventory.feed.updated` | Inventory feed refreshed | `vehicle_count` |
+
+## Retry Policy
+
+If your endpoint returns a non-2xx status or times out (15s), Hrizn retries:
+
+- **Attempt 1**: Immediate
+- **Attempt 2**: ~1 minute later
+- **Attempt 3**: ~5 minutes later
+- **Attempt 4**: ~30 minutes later
+- **Attempt 5**: ~2 hours later
+
+After **5 failed attempts**, the delivery is sent to a dead letter queue. After **10 consecutive failures** across different events, the webhook subscription is **automatically disabled**.
+
+## Testing
+
+Send a test ping to verify your webhook URL:
+
+```bash
+curl -X POST https://public-api.hrizn.io/public/webhooks/{id}/test \
+  -H "X-API-Key: hzk_your_key_here"
+```
+
+This sends a `test.ping` event to your URL and returns the response status.
+
+## Managing Webhooks
+
+| Action | Method | Endpoint |
+| --- | --- | --- |
+| Create | `POST` | `/webhooks` |
+| List | `GET` | `/webhooks` |
+| Update | `PATCH` | `/webhooks/{id}` |
+| Delete | `DELETE` | `/webhooks/{id}` |
+| Test | `POST` | `/webhooks/{id}/test` |
+| Deliveries | `GET` | `/webhooks/{id}/deliveries` |

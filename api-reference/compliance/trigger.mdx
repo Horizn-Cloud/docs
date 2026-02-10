@@ -1,0 +1,25 @@
+---
+title: "Trigger compliance check"
+openapi: "POST /articles/{id}/compliance"
+description: "Run an OEM compliance check on an article"
+---
+
+Queues a compliance check against the site's OEM compliance rules. Results are attached to the article's components when finished.
+
+**Scope required:** `compliance:write`
+
+## Path parameters
+
+<ParamField path="article_id" type="string" required>UUID of the article to check.</ParamField>
+
+<ResponseExample>
+```json 202
+{
+  "data": {
+    "article_id": "art-uuid-123",
+    "status": "checking",
+    "queued_at": "2026-02-10T12:20:00.000Z"
+  }
+}
+```
+</ResponseExample>

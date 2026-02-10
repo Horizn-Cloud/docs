@@ -1,0 +1,48 @@
+---
+title: "Get compliance results"
+openapi: "GET /articles/{id}/compliance"
+description: "Get compliance check results for an article"
+---
+
+Returns the latest compliance check results for an article.
+
+**Scope required:** `compliance:write`
+
+## Path parameters
+
+<ParamField path="article_id" type="string" required>UUID of the article.</ParamField>
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "article_id": "art-uuid-123",
+    "status": "complete",
+    "result": "pass",
+    "issues": [],
+    "checked_at": "2026-02-10T12:20:30.000Z"
+  }
+}
+```
+</ResponseExample>
+
+If issues are found:
+
+```json
+{
+  "data": {
+    "article_id": "art-uuid-123",
+    "status": "complete",
+    "result": "fail",
+    "issues": [
+      {
+        "rule": "no_competitor_mentions",
+        "severity": "error",
+        "message": "Article mentions competitor brand 'Toyota'",
+        "location": "paragraph 3"
+      }
+    ],
+    "checked_at": "2026-02-10T12:20:30.000Z"
+  }
+}
+```

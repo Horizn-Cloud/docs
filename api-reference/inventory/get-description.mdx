@@ -1,0 +1,28 @@
+---
+title: "Get vehicle description"
+openapi: "GET /inventory/{vin}/description"
+description: "Get the AI-generated description for a vehicle"
+---
+
+Returns the AI-generated marketing description for a vehicle, if one exists.
+
+**Scope required:** `inventory:read`
+
+## Path parameters
+
+<ParamField path="id" type="string" required>UUID of the vehicle.</ParamField>
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "vehicle_id": "veh-uuid-123",
+    "description": "Experience the 2025 Honda CR-V EX-L, featuring a turbocharged engine...",
+    "format": "html",
+    "generated_at": "2026-02-10T08:00:00.000Z"
+  }
+}
+```
+</ResponseExample>
+
+Returns `404` if no description has been generated yet.

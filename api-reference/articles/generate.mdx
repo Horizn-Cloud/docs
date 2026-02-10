@@ -1,0 +1,41 @@
+---
+title: "Generate article"
+openapi: "POST /articles/{id}/generate"
+description: "Submit inputs and trigger article generation (interactive mode)"
+---
+
+After creating an article in `interactive` mode, submit the required inputs to trigger generation.
+
+**Scope required:** `articles:write`
+
+## Path parameters
+
+<ParamField path="id" type="string" required>UUID of the article in `awaiting_input` status.</ParamField>
+
+## Request body
+
+<ParamField body="selected_question_ids" type="array" required>
+  Array of question UUIDs from the IdeaCloud.
+</ParamField>
+
+<ParamField body="brand_voice_id" type="string">
+  UUID of a brand voice.
+</ParamField>
+
+<ParamField body="title" type="string">
+  Custom article title.
+</ParamField>
+
+<ResponseExample>
+```json 202
+{
+  "data": {
+    "id": "art-uuid-123",
+    "status": "generating",
+    "article_type": "basic",
+    "title": "Everything You Need to Know About the 2025 CR-V",
+    "created_at": "2026-02-10T12:10:00.000Z"
+  }
+}
+```
+</ResponseExample>

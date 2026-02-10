@@ -1,0 +1,539 @@
+---
+title: "inventory:read"
+description: "List vehicles, view AI descriptions, access inventory feeds, and check stats"
+---
+
+<code>inventory:read</code>
+
+The `inventory:read` scope provides read-only access to your dealership's vehicle inventory data. This includes listing vehicles, viewing individual vehicle details, retrieving AI-generated descriptions, downloading inventory feeds (JSON or XML), and checking inventory statistics.
+
+## Endpoints
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET` | `/public/inventory` | List vehicles |
+| `GET` | `/public/inventory/{vin}` | Get vehicle details |
+| `GET` | `/public/inventory/{vin}/description` | Get AI description |
+| `GET` | `/public/inventory/feed` | Get inventory feed |
+| `GET` | `/public/inventory/stats` | Get inventory stats |
+
+---
+
+## List vehicles
+
+```
+GET /public/inventory
+```
+
+Returns a paginated list of vehicles in your inventory.
+
+### Query parameters
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `limit` | integer | `25` | Number of results to return (1-100) |
+| `cursor` | string | — | Base64-encoded cursor from a previous response |
+| `make` | string | — | Filter by make (case-insensitive partial match) |
+| `model` | string | — | Filter by model (case-insensitive partial match) |
+| `year` | integer | — | Filter by exact model year |
+| `condition` | string | — | Filter by condition: `new` or `used` |
+
+### Example
+
+<CodeGroup>
+```bash cURL
+curl "https://public-api.hrizn.io/public/inventory?limit=10&make=Honda&condition=new" \
+  -H "X-API-Key: hzk_your_key_here"
+```
+```typescript TypeScript
+const res = await fetch("https://public-api.hrizn.io/public/inventory?limit=10&make=Honda&condition=new", {
+  headers: { "X-API-Key": "hzk_your_key_here" },
+});
+const data = await res.json();
+```
+```python Python
+import requests
+
+response = requests.get(
+    "https://public-api.hrizn.io/public/inventory",
+    headers={"X-API-Key": "hzk_your_key_here"},
+    params={"limit": 10, "make": "Honda", "condition": "new"},
+)
+data = response.json()
+```
+```php PHP
+$query = http_build_query(["limit" => 10, "make" => "Honda", "condition" => "new"]);
+$ch = curl_init("https://public-api.hrizn.io/public/inventory?" . $query);
+curl_setopt_array($ch, [
+    CURLOPT_HTTPHEADER => ["X-API-Key: hzk_your_key_here"],
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+### Response — `200 OK`
+
+```json
+{
+  "data": [
+    {
+      "vin": "1HGBH41JXMN109186",
+      "year": 2026,
+      "make": "Honda",
+      "model": "Civic",
+      "trim": "EX",
+      "condition": "new",
+      "price": 28500,
+      "mileage": 12,
+      "exterior_color": "Crystal Black Pearl",
+      "interior_color": "Black",
+      "has_description": true,
+      "image_url": "https://cdn.example.com/vehicles/1HGBH41JXMN109186/main.jpg",
+      "updated_at": "2026-02-01T10:00:00Z"
+    },
+    {
+      "vin": "1HGBH41JXMN109187",
+      "year": 2026,
+      "make": "Honda",
+      "model": "Accord",
+      "trim": "Sport",
+      "condition": "new",
+      "price": 32900,
+      "mileage": 8,
+      "exterior_color": "Lunar Silver Metallic",
+      "interior_color": "Gray",
+      "has_description": false,
+      "image_url": "https://cdn.example.com/vehicles/1HGBH41JXMN109187/main.jpg",
+      "updated_at": "2026-02-01T09:30:00Z"
+    }
+  ],
+  "pagination": {
+    "has_more": true,
+    "next_cursor": "eyJ2aW4iOiIxSEdCSDQxSlhNTjEwOTE4NyJ9",
+    "total_count": 156
+  }
+}
+```
+
+### Status codes
+
+| Code | Description |
+| --- | --- |
+| `200` | Success |
+| `401` | Missing or invalid API key |
+| `403` | API key does not have `inventory:read` scope |
+| `500` | Internal server error |
+
+---
+
+## Get vehicle details
+
+```
+GET /public/inventory/{vin}
+```
+
+Returns full details for a single vehicle including all available fields.
+
+### Path parameters
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `vin` | string | Yes | Vehicle Identification Number |
+
+### Example
+
+<CodeGroup>
+```bash cURL
+curl https://public-api.hrizn.io/public/inventory/1HGBH41JXMN109186 \
+  -H "X-API-Key: hzk_your_key_here"
+```
+```typescript TypeScript
+const res = await fetch("https://public-api.hrizn.io/public/inventory/1HGBH41JXMN109186", {
+  headers: { "X-API-Key": "hzk_your_key_here" },
+});
+const data = await res.json();
+```
+```python Python
+import requests
+
+response = requests.get(
+    "https://public-api.hrizn.io/public/inventory/1HGBH41JXMN109186",
+    headers={"X-API-Key": "hzk_your_key_here"},
+)
+data = response.json()
+```
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/inventory/1HGBH41JXMN109186");
+curl_setopt_array($ch, [
+    CURLOPT_HTTPHEADER => ["X-API-Key: hzk_your_key_here"],
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+### Response — `200 OK`
+
+```json
+{
+  "data": {
+    "vin": "1HGBH41JXMN109186",
+    "year": 2026,
+    "make": "Honda",
+    "model": "Civic",
+    "trim": "EX",
+    "condition": "new",
+    "price": 28500,
+    "msrp": 29500,
+    "mileage": 12,
+    "exterior_color": "Crystal Black Pearl",
+    "interior_color": "Black",
+    "engine": "2.0L 4-Cylinder",
+    "transmission": "CVT",
+    "drivetrain": "FWD",
+    "fuel_type": "Gasoline",
+    "body_style": "Sedan",
+    "features": [
+      "Apple CarPlay",
+      "Android Auto",
+      "Honda Sensing",
+      "Sunroof",
+      "Heated Seats"
+    ],
+    "image_url": "https://cdn.example.com/vehicles/1HGBH41JXMN109186/main.jpg",
+    "images": [
+      "https://cdn.example.com/vehicles/1HGBH41JXMN109186/main.jpg",
+      "https://cdn.example.com/vehicles/1HGBH41JXMN109186/interior.jpg",
+      "https://cdn.example.com/vehicles/1HGBH41JXMN109186/rear.jpg"
+    ],
+    "ai_description": "The 2026 Honda Civic EX offers a perfect blend of style, technology, and efficiency...",
+    "description_status": "completed",
+    "created_at": "2026-01-15T08:00:00Z",
+    "updated_at": "2026-02-01T10:00:00Z"
+  }
+}
+```
+
+### Status codes
+
+| Code | Description |
+| --- | --- |
+| `200` | Success |
+| `400` | VIN is required |
+| `401` | Missing or invalid API key |
+| `403` | API key does not have `inventory:read` scope |
+| `404` | Vehicle not found or belongs to a different site |
+| `500` | Internal server error |
+
+---
+
+## Get AI description
+
+```
+GET /public/inventory/{vin}/description
+```
+
+Returns the AI-generated description for a vehicle. If no description has been generated yet, the status will be `not_generated`.
+
+### Path parameters
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `vin` | string | Yes | Vehicle Identification Number |
+
+### Example
+
+<CodeGroup>
+```bash cURL
+curl https://public-api.hrizn.io/public/inventory/1HGBH41JXMN109186/description \
+  -H "X-API-Key: hzk_your_key_here"
+```
+```typescript TypeScript
+const res = await fetch("https://public-api.hrizn.io/public/inventory/1HGBH41JXMN109186/description", {
+  headers: { "X-API-Key": "hzk_your_key_here" },
+});
+const data = await res.json();
+```
+```python Python
+import requests
+
+response = requests.get(
+    "https://public-api.hrizn.io/public/inventory/1HGBH41JXMN109186/description",
+    headers={"X-API-Key": "hzk_your_key_here"},
+)
+data = response.json()
+```
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/inventory/1HGBH41JXMN109186/description");
+curl_setopt_array($ch, [
+    CURLOPT_HTTPHEADER => ["X-API-Key: hzk_your_key_here"],
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+### Response — `200 OK` (description available)
+
+```json
+{
+  "data": {
+    "vin": "1HGBH41JXMN109186",
+    "status": "completed",
+    "description": "The 2026 Honda Civic EX offers a perfect blend of style, technology, and efficiency. With its turbocharged engine, advanced Honda Sensing suite, and premium interior amenities, this sedan delivers an exceptional driving experience at a competitive price point.",
+    "generated_at": "2026-02-01T09:45:00Z"
+  }
+}
+```
+
+### Response — `200 OK` (not generated)
+
+```json
+{
+  "data": {
+    "vin": "1HGBH41JXMN109186",
+    "status": "not_generated",
+    "description": null,
+    "generated_at": null
+  }
+}
+```
+
+### Status codes
+
+| Code | Description |
+| --- | --- |
+| `200` | Success |
+| `400` | VIN is required |
+| `401` | Missing or invalid API key |
+| `403` | API key does not have `inventory:read` scope |
+| `404` | Vehicle not found or belongs to a different site |
+| `500` | Internal server error |
+
+---
+
+## Get inventory feed
+
+```
+GET /public/inventory/feed
+```
+
+Returns the complete inventory feed. Supports both JSON and XML formats.
+
+### Query parameters
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `format` | string | `json` | Response format: `json` or `xml` |
+
+### Example — JSON feed
+
+<CodeGroup>
+```bash cURL
+curl "https://public-api.hrizn.io/public/inventory/feed?format=json" \
+  -H "X-API-Key: hzk_your_key_here"
+```
+```typescript TypeScript
+const res = await fetch("https://public-api.hrizn.io/public/inventory/feed?format=json", {
+  headers: { "X-API-Key": "hzk_your_key_here" },
+});
+const data = await res.json();
+```
+```python Python
+import requests
+
+response = requests.get(
+    "https://public-api.hrizn.io/public/inventory/feed",
+    headers={"X-API-Key": "hzk_your_key_here"},
+    params={"format": "json"},
+)
+data = response.json()
+```
+```php PHP
+$query = http_build_query(["format" => "json"]);
+$ch = curl_init("https://public-api.hrizn.io/public/inventory/feed?" . $query);
+curl_setopt_array($ch, [
+    CURLOPT_HTTPHEADER => ["X-API-Key: hzk_your_key_here"],
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+### Response — `200 OK` (JSON)
+
+```json
+{
+  "data": {
+    "count": 156,
+    "vehicles": [
+      {
+        "vin": "1HGBH41JXMN109186",
+        "year": 2026,
+        "make": "Honda",
+        "model": "Civic",
+        "trim": "EX",
+        "condition": "new",
+        "price": 28500,
+        "mileage": 12,
+        "exterior_color": "Crystal Black Pearl",
+        "interior_color": "Black",
+        "ai_description": "The 2026 Honda Civic EX offers a perfect blend of style...",
+        "image_url": "https://cdn.example.com/vehicles/1HGBH41JXMN109186/main.jpg"
+      }
+    ]
+  }
+}
+```
+
+### Example — XML feed
+
+<CodeGroup>
+```bash cURL
+curl "https://public-api.hrizn.io/public/inventory/feed?format=xml" \
+  -H "X-API-Key: hzk_your_key_here"
+```
+```typescript TypeScript
+const res = await fetch("https://public-api.hrizn.io/public/inventory/feed?format=xml", {
+  headers: { "X-API-Key": "hzk_your_key_here" },
+});
+const data = await res.text();
+```
+```python Python
+import requests
+
+response = requests.get(
+    "https://public-api.hrizn.io/public/inventory/feed",
+    headers={"X-API-Key": "hzk_your_key_here"},
+    params={"format": "xml"},
+)
+data = response.text
+```
+```php PHP
+$query = http_build_query(["format" => "xml"]);
+$ch = curl_init("https://public-api.hrizn.io/public/inventory/feed?" . $query);
+curl_setopt_array($ch, [
+    CURLOPT_HTTPHEADER => ["X-API-Key: hzk_your_key_here"],
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = curl_exec($ch);
+```
+</CodeGroup>
+
+### Response — `200 OK` (XML)
+
+Returns `Content-Type: application/xml`:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<inventory count="156">
+  <vehicle>
+    <vin>1HGBH41JXMN109186</vin>
+    <year>2026</year>
+    <make>Honda</make>
+    <model>Civic</model>
+    <trim>EX</trim>
+    <condition>new</condition>
+    <price>28500</price>
+    <mileage>12</mileage>
+    <exterior_color>Crystal Black Pearl</exterior_color>
+    <interior_color>Black</interior_color>
+    <ai_description>The 2026 Honda Civic EX offers a perfect blend of style...</ai_description>
+    <image_url>https://cdn.example.com/vehicles/1HGBH41JXMN109186/main.jpg</image_url>
+  </vehicle>
+</inventory>
+```
+
+### Status codes
+
+| Code | Description |
+| --- | --- |
+| `200` | Success |
+| `401` | Missing or invalid API key |
+| `403` | API key does not have `inventory:read` scope |
+| `500` | Internal server error |
+
+---
+
+## Get inventory stats
+
+```
+GET /public/inventory/stats
+```
+
+Returns summary statistics for your inventory.
+
+### Example
+
+<CodeGroup>
+```bash cURL
+curl https://public-api.hrizn.io/public/inventory/stats \
+  -H "X-API-Key: hzk_your_key_here"
+```
+```typescript TypeScript
+const res = await fetch("https://public-api.hrizn.io/public/inventory/stats", {
+  headers: { "X-API-Key": "hzk_your_key_here" },
+});
+const data = await res.json();
+```
+```python Python
+import requests
+
+response = requests.get(
+    "https://public-api.hrizn.io/public/inventory/stats",
+    headers={"X-API-Key": "hzk_your_key_here"},
+)
+data = response.json()
+```
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/inventory/stats");
+curl_setopt_array($ch, [
+    CURLOPT_HTTPHEADER => ["X-API-Key: hzk_your_key_here"],
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+### Response — `200 OK`
+
+```json
+{
+  "data": {
+    "total_vehicles": 156,
+    "with_ai_description": 142,
+    "without_ai_description": 14,
+    "new_vehicles": 89,
+    "used_vehicles": 67,
+    "description_coverage_pct": 91
+  }
+}
+```
+
+### Status codes
+
+| Code | Description |
+| --- | --- |
+| `200` | Success |
+| `401` | Missing or invalid API key |
+| `403` | API key does not have `inventory:read` scope |
+| `500` | Internal server error |
+
+---
+
+## Error response — Missing scope
+
+If your API key does not include `inventory:read`, any request to these endpoints returns:
+
+```json
+{
+  "error": {
+    "code": "forbidden",
+    "message": "This API key requires one of the following scopes: inventory:read",
+    "details": {
+      "required_scopes": ["inventory:read"]
+    }
+  }
+}
+```

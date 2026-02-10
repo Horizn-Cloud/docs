@@ -1,0 +1,51 @@
+---
+title: "Get IdeaCloud questions"
+openapi: "GET /ideaclouds/{id}/questions"
+description: "Get the researched questions and clusters from an IdeaCloud"
+---
+
+Returns the questions discovered during research, organized into clusters by search intent. Only available after the IdeaCloud reaches `complete` status.
+
+**Scope required:** `ideaclouds:read`
+
+## Path parameters
+
+<ParamField path="id" type="string" required>
+  UUID of the IdeaCloud.
+</ParamField>
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "id": "a1b2c3d4-...",
+    "status": "complete",
+    "questions": [
+      {
+        "id": "q1-uuid",
+        "question": "What is the fuel economy of the 2025 Honda CR-V?",
+        "cluster_id": "c1-uuid",
+        "intent": "informational",
+        "source_url": "https://example.com/article",
+        "source_title": "2025 CR-V Fuel Economy Guide",
+        "is_recommended": true
+      },
+      {
+        "id": "q2-uuid",
+        "question": "How does the 2025 CR-V compare to the RAV4?",
+        "cluster_id": "c2-uuid",
+        "intent": "comparison",
+        "source_url": null,
+        "source_title": null,
+        "is_recommended": true
+      }
+    ],
+    "clusters": [
+      { "id": "c1-uuid", "label": "Fuel & performance", "question_count": 5 },
+      { "id": "c2-uuid", "label": "Comparisons", "question_count": 3 }
+    ],
+    "recommended_question_ids": ["q1-uuid", "q2-uuid"]
+  }
+}
+```
+</ResponseExample>

@@ -1,0 +1,27 @@
+---
+title: "Get inventory stats"
+openapi: "GET /inventory/stats"
+description: "Get aggregate inventory statistics"
+---
+
+Returns aggregate statistics about the site's inventory, including counts by make, condition, and price ranges.
+
+**Scope required:** `inventory:read`
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "total_vehicles": 245,
+    "by_condition": { "new": 120, "used": 125 },
+    "by_make": [
+      { "make": "Honda", "count": 85 },
+      { "make": "Toyota", "count": 62 },
+      { "make": "Ford", "count": 48 }
+    ],
+    "price_range": { "min": 15900, "max": 72500, "average": 38200 },
+    "description_coverage": 80.8
+  }
+}
+```
+</ResponseExample>

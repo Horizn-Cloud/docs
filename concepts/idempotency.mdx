@@ -1,0 +1,57 @@
+---
+title: "Idempotency"
+description: "Safely retry requests without duplicate side effects"
+---
+
+POST requests that create resources support idempotency keys to prevent duplicate operations when retrying failed requests.
+
+## How it works
+
+Include an `X-Idempotency-Key` header with a unique string (up to 256 characters). If the same key is sent again within 24 hours, the API returns the original response instead of creating a duplicate.
+
+```bash
+curl -X POST https://public-api.hrizn.io/public/ideaclouds \
+  -H "X-API-Key: hzk_your_key_here" \
+  -H "X-Idempotency-Key: create-ideacloud-2026-02-10-crv-review" \
+  -H "Content-Type: application/json" \
+  -d '{ "keyword": "2025 Honda CR-V reviews" }'
+```
+
+## When to use it
+
+Use idempotency keys on any POST request that triggers a side effect:
+
+- Creating IdeaClouds
+- Creating articles
+- Triggering compliance checks
+- Triggering content tools generation
+- Triggering description generation
+
+GET, PATCH, and DELETE requests are naturally idempotent and do not need this header.
+
+## Key format
+
+Use any string that uniquely identifies the intended operation. Common patterns:
+
+| Pattern | Example |
+| --- | --- |
+| UUID | `550e8400-e29b-41d4-a716-446655440000` |
+| Action + timestamp | `create-article-2026-02-10T12:00:00Z` |
+| External reference | `dsrptv-order-12345` |
+
+## Conflict detection
+
+If you reuse an idempotency key with **different request parameters**, the API returns `409 Conflict`:
+
+```json
+{
+  "error": {
+    "code": "idempotency_conflict",
+    "message": "Idempotency key reused with different parameters"
+  }
+}
+```
+
+## Expiration
+
+Idempotency keys expire after **24 hours**. After that, the same key can be reused with any parameters.

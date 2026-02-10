@@ -1,0 +1,31 @@
+---
+title: "Test webhook"
+openapi: "POST /webhooks/{id}/test"
+description: "Send a test event to a webhook endpoint"
+---
+
+Sends a test payload to the webhook URL. This helps verify that your endpoint is receiving and processing events correctly.
+
+**Scope required:** `webhooks:write`
+
+## Path parameters
+
+<ParamField path="id" type="string" required>UUID of the webhook subscription.</ParamField>
+
+## Request body
+
+<ParamField body="event_type" type="string">
+  The event type to simulate. Defaults to `test.ping`.
+</ParamField>
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "delivered": true,
+    "status_code": 200,
+    "response_time_ms": 132
+  }
+}
+```
+</ResponseExample>

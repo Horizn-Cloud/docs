@@ -1,0 +1,235 @@
+---
+title: "webhooks:read"
+description: "List webhook subscriptions and view delivery logs"
+---
+
+<code>webhooks:read</code>
+
+The `webhooks:read` scope provides read-only access to your webhook subscriptions and their delivery history. Use this to monitor your configured webhooks, check delivery status, and troubleshoot failed deliveries.
+
+## Endpoints
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET` | `/public/webhooks` | List webhook subscriptions |
+| `GET` | `/public/webhooks/{id}/deliveries` | Get delivery logs |
+
+---
+
+## List webhook subscriptions
+
+```
+GET /public/webhooks
+```
+
+Returns all webhook subscriptions for your site.
+
+### Example
+
+<CodeGroup>
+```bash cURL
+curl https://public-api.hrizn.io/public/webhooks \
+  -H "X-API-Key: hzk_your_key_here"
+```
+
+```typescript TypeScript
+const res = await fetch("https://public-api.hrizn.io/public/webhooks", {
+  headers: { "X-API-Key": "hzk_your_key_here" },
+});
+const data = await res.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://public-api.hrizn.io/public/webhooks",
+    headers={"X-API-Key": "hzk_your_key_here"},
+)
+data = response.json()
+```
+
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/webhooks");
+curl_setopt_array($ch, [
+    CURLOPT_HTTPHEADER => ["X-API-Key: hzk_your_key_here"],
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+### Response — `200 OK`
+
+```json
+{
+  "data": {
+    "webhooks": [
+      {
+        "id": "wh-a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "url": "https://partner.example.com/webhooks/hrizn",
+        "events": [
+          "ideacloud.completed",
+          "article.completed",
+          "compliance.completed"
+        ],
+        "is_active": true,
+        "failure_count": 0,
+        "created_at": "2026-01-15T10:00:00Z",
+        "updated_at": "2026-01-15T10:00:00Z"
+      },
+      {
+        "id": "wh-b2c3d4e5-f6a7-8901-bcde-f12345678901",
+        "url": "https://partner.example.com/webhooks/inventory",
+        "events": [
+          "inventory.description.completed",
+          "inventory.feed.updated"
+        ],
+        "is_active": true,
+        "failure_count": 2,
+        "created_at": "2026-01-20T14:30:00Z",
+        "updated_at": "2026-02-01T08:15:00Z"
+      }
+    ]
+  }
+}
+```
+
+### Status codes
+
+| Code | Description |
+| --- | --- |
+| `200` | Success |
+| `401` | Missing or invalid API key |
+| `403` | API key does not have `webhooks:read` scope |
+| `500` | Internal server error |
+
+---
+
+## Get delivery logs
+
+```
+GET /public/webhooks/{id}/deliveries
+```
+
+Returns recent delivery attempts for a specific webhook subscription. Use this to check delivery status, response codes, and retry schedules.
+
+### Path parameters
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | string | Yes | Webhook subscription ID |
+
+### Query parameters
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `limit` | integer | `25` | Number of results to return (1-100) |
+
+### Example
+
+<CodeGroup>
+```bash cURL
+curl "https://public-api.hrizn.io/public/webhooks/wh-a1b2c3d4-e5f6-7890-abcd-ef1234567890/deliveries?limit=10" \
+  -H "X-API-Key: hzk_your_key_here"
+```
+
+```typescript TypeScript
+const res = await fetch("https://public-api.hrizn.io/public/webhooks/wh-a1b2c3d4-e5f6-7890-abcd-ef1234567890/deliveries?limit=10", {
+  headers: { "X-API-Key": "hzk_your_key_here" },
+});
+const data = await res.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://public-api.hrizn.io/public/webhooks/wh-a1b2c3d4-e5f6-7890-abcd-ef1234567890/deliveries",
+    params={"limit": 10},
+    headers={"X-API-Key": "hzk_your_key_here"},
+)
+data = response.json()
+```
+
+```php PHP
+$url = "https://public-api.hrizn.io/public/webhooks/wh-a1b2c3d4-e5f6-7890-abcd-ef1234567890/deliveries?" . http_build_query(["limit" => 10]);
+$ch = curl_init($url);
+curl_setopt_array($ch, [
+    CURLOPT_HTTPHEADER => ["X-API-Key: hzk_your_key_here"],
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+### Response — `200 OK`
+
+```json
+{
+  "data": {
+    "deliveries": [
+      {
+        "id": "del-001-uuid",
+        "event_type": "article.completed",
+        "response_status": 200,
+        "attempt_count": 1,
+        "delivered_at": "2026-02-01T15:30:05Z",
+        "next_retry_at": null,
+        "created_at": "2026-02-01T15:30:00Z"
+      },
+      {
+        "id": "del-002-uuid",
+        "event_type": "ideacloud.completed",
+        "response_status": 200,
+        "attempt_count": 1,
+        "delivered_at": "2026-02-01T14:45:02Z",
+        "next_retry_at": null,
+        "created_at": "2026-02-01T14:45:00Z"
+      },
+      {
+        "id": "del-003-uuid",
+        "event_type": "compliance.completed",
+        "response_status": 503,
+        "attempt_count": 3,
+        "delivered_at": null,
+        "next_retry_at": "2026-02-01T16:00:00Z",
+        "created_at": "2026-02-01T15:00:00Z"
+      }
+    ]
+  }
+}
+```
+
+<Note>
+Deliveries with a non-null `next_retry_at` are still being retried. If `delivered_at` is `null` and `next_retry_at` is also `null`, the delivery has permanently failed after exhausting all retry attempts.
+</Note>
+
+### Status codes
+
+| Code | Description |
+| --- | --- |
+| `200` | Success |
+| `400` | Webhook ID is required |
+| `401` | Missing or invalid API key |
+| `403` | API key does not have `webhooks:read` scope |
+| `404` | Webhook subscription not found or belongs to a different site |
+| `500` | Internal server error |
+
+---
+
+## Error response — Missing scope
+
+If your API key does not include `webhooks:read`, any request to these endpoints returns:
+
+```json
+{
+  "error": {
+    "code": "forbidden",
+    "message": "This API key requires one of the following scopes: webhooks:read",
+    "details": {
+      "required_scopes": ["webhooks:read"]
+    }
+  }
+}
+```

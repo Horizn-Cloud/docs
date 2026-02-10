@@ -1,0 +1,19 @@
+---
+title: "Content tools"
+openapi: "GET /reference/content-tools"
+description: "List all content tool types"
+---
+
+Returns the content tools that can be triggered on articles.
+
+<ResponseExample>
+```json 200
+{
+  "data": [
+    { "id": "seo_metadata", "name": "SEO Metadata", "description": "Generate title tag, meta description, and focus keywords" },
+    { "id": "json_ld_schema", "name": "JSON-LD Schema", "description": "Generate structured data markup for search engines" },
+    { "id": "social_snippets", "name": "Social Snippets", "description": "Generate Open Graph and Twitter Card meta tags" }
+  ]
+}
+```
+</ResponseExample>

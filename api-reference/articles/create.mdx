@@ -1,0 +1,88 @@
+---
+title: "Create article"
+openapi: "POST /articles"
+description: "Generate an article from a completed IdeaCloud"
+---
+
+Creates and generates an article from a completed IdeaCloud. Supports two modes: `simple` (automatic) and `interactive` (choose questions first).
+
+**Scope required:** `articles:write`
+
+## Request body
+
+<ParamField body="ideacloud_id" type="string" required>
+  UUID of a completed IdeaCloud.
+</ParamField>
+
+<ParamField body="article_type" type="string" required>
+  One of: `basic`, `qa`, `expert`, `modellanding`, `comparison`, `salesevent`.
+</ParamField>
+
+<ParamField body="selected_question_ids" type="array">
+  Array of question UUIDs to cover. Defaults to the IdeaCloud's recommended questions.
+</ParamField>
+
+<ParamField body="brand_voice_id" type="string">
+  UUID of a brand voice to use for generation.
+</ParamField>
+
+<ParamField body="title" type="string">
+  Custom article title (max 500 characters). Defaults to the IdeaCloud's title.
+</ParamField>
+
+<ParamField body="auto_compliance" type="boolean" default="false">
+  Automatically run a compliance check after generation.
+</ParamField>
+
+<ParamField body="auto_content_tools" type="boolean" default="false">
+  Automatically generate SEO metadata, schemas, and social snippets.
+</ParamField>
+
+<ParamField body="mode" type="string" default="simple">
+  `simple` - Generate immediately with defaults. `interactive` - Return required inputs for review before generating.
+</ParamField>
+
+## Response
+
+**Simple mode** returns `202 Accepted`:
+
+<ResponseExample>
+```json 202
+{
+  "data": {
+    "id": "art-uuid-123",
+    "status": "generating",
+    "article_type": "basic",
+    "title": "2025 Honda CR-V Reviews",
+    "created_at": "2026-02-10T12:10:00.000Z"
+  }
+}
+```
+</ResponseExample>
+
+**Interactive mode** returns `200 OK` with required inputs:
+
+```json
+{
+  "data": {
+    "id": null,
+    "status": "awaiting_input",
+    "ideacloud_id": "a1b2c3d4-...",
+    "article_type": "basic",
+    "required_inputs": {
+      "selected_question_ids": {
+        "type": "array",
+        "required": true,
+        "options": [
+          { "id": "q1-uuid", "question": "What is the fuel economy?" },
+          { "id": "q2-uuid", "question": "How does it compare to RAV4?" }
+        ]
+      },
+      "brand_voice_id": { "type": "string", "required": false },
+      "title": { "type": "string", "required": false }
+    }
+  }
+}
+```
+
+After reviewing the inputs, submit them to [Generate article](/api-reference/articles/generate) to complete generation.

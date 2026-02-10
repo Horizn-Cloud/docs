@@ -1,0 +1,133 @@
+---
+title: "Scopes Overview"
+description: "Understand how scopes control API key permissions and which endpoints each scope unlocks"
+---
+
+Scopes define exactly which endpoints an API key can access. When you create a key, you choose one or more scopes. Every request is checked against the key's scopes before it reaches the handler. If the key lacks the required scope, the request is rejected with a `403 Forbidden` response.
+
+## All available scopes
+
+| Scope | Description | Endpoints |
+| --- | --- | --- |
+| [`ideaclouds:read`](/scopes/ideaclouds-read) | List and retrieve IdeaClouds, questions, and clusters | 3 |
+| [`ideaclouds:write`](/scopes/ideaclouds-write) | Create IdeaClouds (single and batch) | 2 |
+| [`articles:read`](/scopes/articles-read) | List and retrieve articles, HTML, components, and compliance reports | 5 |
+| [`articles:write`](/scopes/articles-write) | Create articles and trigger generation | 3 |
+| [`compliance:write`](/scopes/compliance-write) | Trigger compliance checks on articles | 1 |
+| [`content_tools:write`](/scopes/content-tools-write) | Generate SEO metadata, schemas, and social snippets | 2 |
+| [`inventory:read`](/scopes/inventory-read) | List vehicles, view descriptions, feeds, and stats | 5 |
+| [`inventory:write`](/scopes/inventory-write) | Trigger AI description generation (single and batch) | 2 |
+| [`webhooks:read`](/scopes/webhooks-read) | List webhook subscriptions and delivery logs | 2 |
+| [`webhooks:write`](/scopes/webhooks-write) | Create, update, delete, and test webhook subscriptions | 4 |
+| [`site:read`](/scopes/site-read) | View site details, categories, brand voices, elements, and article types | 5 |
+
+## How scope enforcement works
+
+Every public API endpoint declares one or more required scopes. When a request arrives, the authorizer:
+
+1. Validates the API key from the `X-API-Key` header
+2. Loads the key's assigned scopes from the database
+3. Checks if the key has **at least one** of the endpoint's required scopes
+4. If the key lacks the required scope, the request is rejected **before** the handler runs
+
+### 403 Forbidden response
+
+When a key does not have the required scope, the API returns:
+
+```json
+{
+  "error": {
+    "code": "forbidden",
+    "message": "This API key requires one of the following scopes: articles:write",
+    "details": {
+      "required_scopes": ["articles:write"]
+    }
+  }
+}
+```
+
+The `required_scopes` array in `details` tells you exactly which scope(s) you need. Add the scope to your API key in the [Hrizn Dashboard](https://app.hrizn.io), or create a new key with the correct scopes.
+
+## Presets
+
+When creating an API key in the dashboard, you can use presets to quickly assign common scope combinations:
+
+| Preset | Scopes included |
+| --- | --- |
+| **Full Access** | All 11 scopes |
+| **Read Only** | `ideaclouds:read`, `articles:read`, `inventory:read`, `site:read` |
+| **Content Generation** | All read scopes + `ideaclouds:write`, `articles:write`, `compliance:write`, `content_tools:write` |
+| **Inventory Only** | `inventory:read`, `inventory:write`, `site:read` |
+
+## Endpoints that do not require a specific scope
+
+The following endpoints require a valid API key but are accessible with **any** scope:
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET` | `/public/reference/scopes` | List all available scopes |
+| `GET` | `/public/reference/article-types` | List all article types |
+| `GET` | `/public/reference/component-types` | List all component types |
+| `GET` | `/public/reference/webhook-events` | List all webhook event types |
+| `GET` | `/public/reference/content-tools` | List all content tools |
+
+The health check endpoint does not require an API key at all:
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET` | `/public/health` | Health check (no authentication) |
+
+## Check your key's scopes programmatically
+
+<CodeGroup>
+```bash cURL
+curl https://public-api.hrizn.io/public/reference/scopes \
+  -H "X-API-Key: hzk_your_key_here"
+```
+
+```typescript TypeScript
+const res = await fetch("https://public-api.hrizn.io/public/reference/scopes", {
+  headers: { "X-API-Key": "hzk_your_key_here" },
+});
+const data = await res.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://public-api.hrizn.io/public/reference/scopes",
+    headers={"X-API-Key": "hzk_your_key_here"},
+)
+data = response.json()
+```
+
+```php PHP
+$ch = curl_init("https://public-api.hrizn.io/public/reference/scopes");
+curl_setopt_array($ch, [
+    CURLOPT_HTTPHEADER => ["X-API-Key: hzk_your_key_here"],
+    CURLOPT_RETURNTRANSFER => true,
+]);
+$data = json_decode(curl_exec($ch));
+```
+</CodeGroup>
+
+```json
+{
+  "data": {
+    "scopes": {
+      "ideaclouds:read": "List and view IdeaClouds and questions",
+      "ideaclouds:write": "Create IdeaClouds",
+      "articles:read": "List and view articles, components, HTML",
+      "articles:write": "Create articles, trigger generation",
+      "compliance:write": "Trigger compliance checks",
+      "content_tools:write": "Generate schemas, meta, social snippets",
+      "inventory:read": "List and view inventory, descriptions, feeds",
+      "inventory:write": "Trigger inventory description generation",
+      "webhooks:read": "View webhook subscriptions and deliveries",
+      "webhooks:write": "Create, update, delete webhook subscriptions",
+      "site:read": "View site details, brand voices, elements, categories"
+    }
+  }
+}
+```

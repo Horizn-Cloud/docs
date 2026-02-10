@@ -1,0 +1,30 @@
+---
+title: "Get article"
+openapi: "GET /articles/{id}"
+description: "Get details and component status of an article"
+---
+
+Returns article metadata and a summary of its components. **Scope required:** `articles:read`
+
+## Path parameters
+
+<ParamField path="id" type="string" required>UUID of the article.</ParamField>
+
+<ResponseExample>
+```json 200
+{
+  "data": {
+    "id": "art-uuid-123",
+    "title": "2025 Honda CR-V Reviews",
+    "article_type": "basic",
+    "metadata": { "generation_status": "complete" },
+    "components": [
+      { "type": "Body", "status": "Complete", "updated_at": "2026-02-10T12:15:00.000Z" },
+      { "type": "SeoMetadata", "status": "Complete", "updated_at": "2026-02-10T12:16:00.000Z" }
+    ],
+    "created_at": "2026-02-10T12:10:00.000Z",
+    "updated_at": "2026-02-10T12:16:00.000Z"
+  }
+}
+```
+</ResponseExample>

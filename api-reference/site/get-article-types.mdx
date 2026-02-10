@@ -1,0 +1,23 @@
+---
+title: "Get article types"
+openapi: "GET /site/article-types"
+description: "List article types enabled for this site"
+---
+
+Returns the article types enabled for this site. Each site may have a different set of available article types based on their configuration.
+
+**Scope required:** `site:read`
+
+<ResponseExample>
+```json 200
+{
+  "data": [
+    { "id": "basic", "name": "Basic Article", "description": "Standard informational article" },
+    { "id": "qa", "name": "Q&A Article", "description": "Question and answer format" },
+    { "id": "expert", "name": "Expert Article", "description": "In-depth expert analysis" },
+    { "id": "modellanding", "name": "Model Landing Page", "description": "Vehicle model overview page" },
+    { "id": "comparison", "name": "Comparison", "description": "Side-by-side vehicle comparison" }
+  ]
+}
+```
+</ResponseExample>

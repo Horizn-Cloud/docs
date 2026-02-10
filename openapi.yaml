@@ -1,0 +1,2299 @@
+openapi: 3.1.0
+info:
+  title: Hrizn Public API
+  version: "2026-02-01"
+  description: |
+    The Hrizn Public API allows partners to programmatically create content, manage inventory descriptions, and integrate with the Hrizn platform.
+
+    All endpoints are prefixed with `/public` and require an API key passed via the `X-API-Key` header (except the health check).
+  contact:
+    email: support@hrizn.io
+
+servers:
+  - url: https://public-api.hrizn.io/public
+    description: Production
+
+security:
+  - apiKeyAuth: []
+
+tags:
+  - name: IdeaClouds
+    description: Create and manage AI-powered keyword research
+  - name: Articles
+    description: Generate articles from IdeaClouds
+  - name: Compliance
+    description: Run OEM compliance checks on articles
+  - name: Content Tools
+    description: Generate SEO metadata, schemas, and social snippets
+  - name: Inventory
+    description: Access vehicle data and AI descriptions
+  - name: Site
+    description: View dealership details and configuration
+  - name: Webhooks
+    description: Manage webhook subscriptions for real-time events
+  - name: Reference
+    description: Look up available types, scopes, and events
+  - name: Health
+    description: Health check (no authentication)
+
+paths:
+  # ──────────────────── Health ────────────────────
+  /health:
+    get:
+      operationId: getHealth
+      tags: [Health]
+      summary: Health check
+      security: []
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                        example: ok
+                      version:
+                        type: string
+                        example: "2026-02-01"
+                      timestamp:
+                        type: string
+                        format: date-time
+
+  # ──────────────────── IdeaClouds ────────────────────
+  /ideaclouds:
+    post:
+      operationId: createIdeaCloud
+      tags: [IdeaClouds]
+      summary: Create IdeaCloud
+      description: Creates a new IdeaCloud and begins AI-powered keyword research.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateIdeaCloudInput"
+      responses:
+        "202":
+          description: IdeaCloud created and research started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdeaCloudCreatedResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    get:
+      operationId: listIdeaClouds
+      tags: [IdeaClouds]
+      summary: List IdeaClouds
+      description: Returns a paginated list of IdeaClouds for your site.
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Cursor"
+        - name: status
+          in: query
+          schema:
+            type: string
+          description: Filter by status (e.g. researching, complete, failed)
+        - name: keyword
+          in: query
+          schema:
+            type: string
+          description: Case-insensitive partial match on keyword
+      responses:
+        "200":
+          description: Paginated list of IdeaClouds
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdeaCloudListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /ideaclouds/batch:
+    post:
+      operationId: createIdeaCloudBatch
+      tags: [IdeaClouds]
+      summary: Create IdeaClouds in batch
+      description: Creates multiple IdeaClouds in a single request (1-25 items).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateIdeaCloudBatchInput"
+      responses:
+        "202":
+          description: Batch accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdeaCloudBatchResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /ideaclouds/{id}:
+    get:
+      operationId: getIdeaCloud
+      tags: [IdeaClouds]
+      summary: Get IdeaCloud details
+      parameters:
+        - $ref: "#/components/parameters/IdeaCloudId"
+      responses:
+        "200":
+          description: IdeaCloud details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdeaCloudDetailResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /ideaclouds/{id}/questions:
+    get:
+      operationId: getIdeaCloudQuestions
+      tags: [IdeaClouds]
+      summary: Get questions and clusters
+      description: Returns research questions and clusters. If research is in progress, arrays are empty.
+      parameters:
+        - $ref: "#/components/parameters/IdeaCloudId"
+      responses:
+        "200":
+          description: Questions and clusters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdeaCloudQuestionsResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  # ──────────────────── Articles ────────────────────
+  /articles:
+    post:
+      operationId: createArticle
+      tags: [Articles]
+      summary: Create article
+      description: Creates a new article from a completed IdeaCloud.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateArticleInput"
+      responses:
+        "200":
+          description: Interactive mode — awaiting input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArticleInteractiveResponse"
+        "202":
+          description: Simple mode — article created and generation started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArticleCreatedResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    get:
+      operationId: listArticles
+      tags: [Articles]
+      summary: List articles
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Cursor"
+        - name: article_type
+          in: query
+          schema:
+            $ref: "#/components/schemas/ArticleType"
+          description: Filter by article type
+      responses:
+        "200":
+          description: Paginated list of articles
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArticleListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /articles/batch:
+    post:
+      operationId: createArticleBatch
+      tags: [Articles]
+      summary: Create articles in batch
+      description: Creates multiple articles in a single request (1-10 items).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateArticleBatchInput"
+      responses:
+        "202":
+          description: Batch accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArticleBatchResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /articles/{id}:
+    get:
+      operationId: getArticle
+      tags: [Articles]
+      summary: Get article details
+      parameters:
+        - $ref: "#/components/parameters/ArticleId"
+      responses:
+        "200":
+          description: Article details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArticleDetailResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /articles/{id}/html:
+    get:
+      operationId: getArticleHtml
+      tags: [Articles]
+      summary: Get rendered HTML
+      description: Returns article body as HTML. Use Accept text/html for raw HTML.
+      parameters:
+        - $ref: "#/components/parameters/ArticleId"
+      responses:
+        "200":
+          description: Article HTML content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArticleHtmlResponse"
+            text/html:
+              schema:
+                type: string
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /articles/{id}/components:
+    get:
+      operationId: getArticleComponents
+      tags: [Articles]
+      summary: Get all components
+      parameters:
+        - $ref: "#/components/parameters/ArticleId"
+      responses:
+        "200":
+          description: All article components
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArticleComponentsResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /articles/{id}/components/{type}:
+    get:
+      operationId: getArticleComponent
+      tags: [Articles]
+      summary: Get a single component
+      parameters:
+        - $ref: "#/components/parameters/ArticleId"
+        - name: type
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/ComponentType"
+          description: Component type
+      responses:
+        "200":
+          description: Single component
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArticleSingleComponentResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /articles/{id}/generate:
+    post:
+      operationId: generateArticle
+      tags: [Articles]
+      summary: Generate interactive-mode article
+      description: Triggers generation for an article created in interactive mode.
+      parameters:
+        - $ref: "#/components/parameters/ArticleId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateArticleInput"
+      responses:
+        "202":
+          description: Generation started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      status:
+                        type: string
+                        example: generating
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  # ──────────────────── Compliance ────────────────────
+  /articles/{id}/compliance:
+    post:
+      operationId: triggerCompliance
+      tags: [Compliance]
+      summary: Trigger compliance check
+      description: Starts an asynchronous OEM compliance check on an article.
+      parameters:
+        - $ref: "#/components/parameters/ArticleId"
+      responses:
+        "202":
+          description: Compliance check started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      article_id:
+                        type: string
+                        format: uuid
+                      status:
+                        type: string
+                        example: checking
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    get:
+      operationId: getCompliance
+      tags: [Compliance]
+      summary: Get compliance report
+      parameters:
+        - $ref: "#/components/parameters/ArticleId"
+      responses:
+        "200":
+          description: Compliance report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComplianceResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  # ──────────────────── Content Tools ────────────────────
+  /articles/{id}/content-tools:
+    post:
+      operationId: generateContentTools
+      tags: [Content Tools]
+      summary: Generate content tools
+      description: Triggers generation for all or selected content tools on an article.
+      parameters:
+        - $ref: "#/components/parameters/ArticleId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContentToolsInput"
+      responses:
+        "202":
+          description: Content tool generation started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentToolsResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /articles/{id}/content-tools/{tool}:
+    post:
+      operationId: generateSingleContentTool
+      tags: [Content Tools]
+      summary: Generate a single content tool
+      parameters:
+        - $ref: "#/components/parameters/ArticleId"
+        - name: tool
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/ContentToolName"
+          description: The content tool to generate
+      responses:
+        "202":
+          description: Content tool generation started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentToolsResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  # ──────────────────── Inventory ────────────────────
+  /inventory:
+    get:
+      operationId: listInventory
+      tags: [Inventory]
+      summary: List vehicles
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Cursor"
+        - name: make
+          in: query
+          schema:
+            type: string
+          description: Filter by make (case-insensitive partial match)
+        - name: model
+          in: query
+          schema:
+            type: string
+          description: Filter by model (case-insensitive partial match)
+        - name: year
+          in: query
+          schema:
+            type: integer
+          description: Filter by exact model year
+        - name: condition
+          in: query
+          schema:
+            type: string
+            enum: [new, used]
+          description: Filter by condition
+      responses:
+        "200":
+          description: Paginated list of vehicles
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /inventory/feed:
+    get:
+      operationId: getInventoryFeed
+      tags: [Inventory]
+      summary: Get inventory feed
+      description: Returns the complete inventory feed in JSON or XML format.
+      parameters:
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [json, xml]
+            default: json
+          description: Response format
+      responses:
+        "200":
+          description: Inventory feed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryFeedResponse"
+            application/xml:
+              schema:
+                type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /inventory/stats:
+    get:
+      operationId: getInventoryStats
+      tags: [Inventory]
+      summary: Get inventory stats
+      responses:
+        "200":
+          description: Inventory statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryStatsResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /inventory/descriptions/batch:
+    post:
+      operationId: generateDescriptionBatch
+      tags: [Inventory]
+      summary: Generate descriptions in batch
+      description: Triggers AI description generation for multiple vehicles (1-50 VINs).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateDescriptionBatchInput"
+      responses:
+        "202":
+          description: Batch accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DescriptionBatchResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /inventory/{vin}:
+    get:
+      operationId: getVehicle
+      tags: [Inventory]
+      summary: Get vehicle details
+      parameters:
+        - $ref: "#/components/parameters/Vin"
+      responses:
+        "200":
+          description: Vehicle details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleDetailResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /inventory/{vin}/description:
+    get:
+      operationId: getDescription
+      tags: [Inventory]
+      summary: Get AI description
+      parameters:
+        - $ref: "#/components/parameters/Vin"
+      responses:
+        "200":
+          description: Vehicle AI description
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DescriptionResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    post:
+      operationId: generateDescription
+      tags: [Inventory]
+      summary: Generate AI description
+      description: Triggers AI description generation for a single vehicle.
+      parameters:
+        - $ref: "#/components/parameters/Vin"
+      responses:
+        "202":
+          description: Description generation started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      vin:
+                        type: string
+                        example: "1HGBH41JXMN109186"
+                      status:
+                        type: string
+                        example: generating
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  # ──────────────────── Site ────────────────────
+  /site:
+    get:
+      operationId: getSite
+      tags: [Site]
+      summary: Get site details
+      responses:
+        "200":
+          description: Site profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiteResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /site/categories:
+    get:
+      operationId: getSiteCategories
+      tags: [Site]
+      summary: List categories
+      responses:
+        "200":
+          description: Site categories
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoriesResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /site/brand-voices:
+    get:
+      operationId: getSiteBrandVoices
+      tags: [Site]
+      summary: List brand voices
+      responses:
+        "200":
+          description: Brand voices
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrandVoicesResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /site/elements:
+    get:
+      operationId: getSiteElements
+      tags: [Site]
+      summary: List site elements
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+          description: Filter by element type
+      responses:
+        "200":
+          description: Site elements
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ElementsResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /site/article-types:
+    get:
+      operationId: getSiteArticleTypes
+      tags: [Site]
+      summary: List article types
+      responses:
+        "200":
+          description: Available article types
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiteArticleTypesResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  # ──────────────────── Webhooks ────────────────────
+  /webhooks:
+    post:
+      operationId: createWebhook
+      tags: [Webhooks]
+      summary: Create webhook subscription
+      description: Creates a new webhook. The response includes a secret for HMAC verification (only shown once).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWebhookInput"
+      responses:
+        "201":
+          description: Webhook created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookCreatedResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    get:
+      operationId: listWebhooks
+      tags: [Webhooks]
+      summary: List webhook subscriptions
+      responses:
+        "200":
+          description: All webhook subscriptions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /webhooks/{id}:
+    patch:
+      operationId: updateWebhook
+      tags: [Webhooks]
+      summary: Update webhook subscription
+      parameters:
+        - $ref: "#/components/parameters/WebhookId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateWebhookInput"
+      responses:
+        "200":
+          description: Webhook updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookUpdatedResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    delete:
+      operationId: deleteWebhook
+      tags: [Webhooks]
+      summary: Delete webhook subscription
+      parameters:
+        - $ref: "#/components/parameters/WebhookId"
+      responses:
+        "204":
+          description: Webhook deleted
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /webhooks/{id}/test:
+    post:
+      operationId: testWebhook
+      tags: [Webhooks]
+      summary: Send test ping
+      description: Sends a synchronous test.ping event to the webhook URL.
+      parameters:
+        - $ref: "#/components/parameters/WebhookId"
+      responses:
+        "200":
+          description: Test result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookTestResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /webhooks/{id}/deliveries:
+    get:
+      operationId: getWebhookDeliveries
+      tags: [Webhooks]
+      summary: Get delivery logs
+      parameters:
+        - $ref: "#/components/parameters/WebhookId"
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 25
+            minimum: 1
+            maximum: 100
+          description: Number of deliveries to return
+      responses:
+        "200":
+          description: Delivery logs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookDeliveriesResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  # ──────────────────── Reference ────────────────────
+  /reference/article-types:
+    get:
+      operationId: getReferenceArticleTypes
+      tags: [Reference]
+      summary: List article types
+      responses:
+        "200":
+          description: All article types
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      article_types:
+                        type: object
+                        example:
+                          basic: Standard article
+                          qa: "Q&A interview article"
+                          expert: Expert opinion article
+                          modellanding: Model research page
+                          comparison: Vehicle comparison article
+                          salesevent: Sales event promotional page
+
+  /reference/component-types:
+    get:
+      operationId: getReferenceComponentTypes
+      tags: [Reference]
+      summary: List component types
+      responses:
+        "200":
+          description: All component types
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      component_types:
+                        type: object
+
+  /reference/webhook-events:
+    get:
+      operationId: getReferenceWebhookEvents
+      tags: [Reference]
+      summary: List webhook event types
+      responses:
+        "200":
+          description: All webhook event types
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      webhook_events:
+                        type: object
+
+  /reference/scopes:
+    get:
+      operationId: getReferenceScopes
+      tags: [Reference]
+      summary: List available scopes
+      responses:
+        "200":
+          description: All API scopes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      scopes:
+                        type: object
+
+  /reference/content-tools:
+    get:
+      operationId: getReferenceContentTools
+      tags: [Reference]
+      summary: List content tools
+      responses:
+        "200":
+          description: All content tools
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      content_tools:
+                        type: array
+                        items:
+                          type: string
+
+components:
+  securitySchemes:
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: Your Hrizn API key (prefix hzk_)
+
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        default: 25
+        minimum: 1
+        maximum: 100
+      description: Number of results per page
+    Cursor:
+      name: cursor
+      in: query
+      schema:
+        type: string
+      description: Base64-encoded pagination cursor
+    IdeaCloudId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: IdeaCloud ID
+    ArticleId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Article ID
+    Vin:
+      name: vin
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 11
+        maxLength: 17
+      description: Vehicle Identification Number
+    WebhookId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Webhook subscription ID
+
+  responses:
+    BadRequest:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Missing or invalid API key
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Forbidden:
+      description: API key lacks required scope
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    RateLimited:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+  schemas:
+    # ─── Enums ───
+    ArticleType:
+      type: string
+      enum: [basic, qa, expert, modellanding, comparison, salesevent]
+
+    ComponentType:
+      type: string
+      enum:
+        - Body
+        - SeoMetadata
+        - PageSlugs
+        - PostTags
+        - BlogCategories
+        - SearchIntent
+        - FacebookSnip
+        - TwitterSnip
+        - InstagramSnip
+        - GoogleBusinessSnip
+        - VideoScript
+        - ArticleSchema
+        - AuthorSchema
+        - OrganizationSchema
+        - VehicleListingSchema
+        - FaqSchema
+        - EventSchema
+        - QaPageSchema
+
+    ContentToolName:
+      type: string
+      enum:
+        - seo-metadata
+        - schemas
+        - social-snippets
+        - page-slugs
+        - post-tags
+        - search-intent
+
+    WebhookEventType:
+      type: string
+      enum:
+        - ideacloud.completed
+        - ideacloud.failed
+        - article.completed
+        - article.failed
+        - compliance.completed
+        - content_tools.completed
+        - inventory.description.completed
+        - inventory.description.batch_completed
+        - inventory.feed.updated
+
+    ApiScope:
+      type: string
+      enum:
+        - "ideaclouds:read"
+        - "ideaclouds:write"
+        - "articles:read"
+        - "articles:write"
+        - "compliance:write"
+        - "content_tools:write"
+        - "inventory:read"
+        - "inventory:write"
+        - "webhooks:read"
+        - "webhooks:write"
+        - "site:read"
+
+    # ─── Common ───
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: validation_error
+            message:
+              type: string
+              example: "keyword: Required"
+            details:
+              type: object
+            request_id:
+              type: string
+
+    PaginationInfo:
+      type: object
+      properties:
+        has_more:
+          type: boolean
+        next_cursor:
+          type: string
+          nullable: true
+        total_count:
+          type: integer
+
+    # ─── IdeaClouds ───
+    CreateIdeaCloudInput:
+      type: object
+      required: [keyword]
+      properties:
+        keyword:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: Keyword or topic to research
+        category_id:
+          type: string
+          format: uuid
+          description: Optional category UUID
+
+    CreateIdeaCloudBatchInput:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          minItems: 1
+          maxItems: 25
+          items:
+            $ref: "#/components/schemas/CreateIdeaCloudInput"
+
+    IdeaCloudSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        keyword:
+          type: string
+        title:
+          type: string
+        synopsis:
+          type: string
+        status:
+          type: string
+        category_id:
+          type: string
+          format: uuid
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    IdeaCloudCreatedResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            status:
+              type: string
+              example: researching
+            keyword:
+              type: string
+            created_at:
+              type: string
+              format: date-time
+
+    IdeaCloudListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/IdeaCloudSummary"
+        pagination:
+          $ref: "#/components/schemas/PaginationInfo"
+
+    IdeaCloudBatchResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  keyword:
+                    type: string
+                  status:
+                    type: string
+                  error:
+                    type: string
+
+    IdeaCloudDetailResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            keyword:
+              type: string
+            title:
+              type: string
+            synopsis:
+              type: string
+            tags: {}
+            status:
+              type: string
+            category_id:
+              type: string
+              format: uuid
+              nullable: true
+            recommended_question_ids:
+              type: array
+              items:
+                type: string
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+
+    IdeaCloudQuestionsResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            status:
+              type: string
+            questions:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  question:
+                    type: string
+                  cluster_id:
+                    type: string
+                    nullable: true
+                  intent: {}
+                  source_url:
+                    type: string
+                    nullable: true
+                  source_title:
+                    type: string
+                    nullable: true
+                  is_recommended:
+                    type: boolean
+            clusters:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  label:
+                    type: string
+                  question_count:
+                    type: integer
+            recommended_question_ids:
+              type: array
+              items:
+                type: string
+            message:
+              type: string
+
+    # ─── Articles ───
+    CreateArticleInput:
+      type: object
+      required: [ideacloud_id, article_type]
+      properties:
+        ideacloud_id:
+          type: string
+          format: uuid
+        article_type:
+          $ref: "#/components/schemas/ArticleType"
+        selected_question_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          minItems: 1
+        brand_voice_id:
+          type: string
+        title:
+          type: string
+          maxLength: 500
+        auto_compliance:
+          type: boolean
+          default: false
+        auto_content_tools:
+          type: boolean
+          default: false
+        mode:
+          type: string
+          enum: [simple, interactive]
+          default: simple
+
+    CreateArticleBatchInput:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          minItems: 1
+          maxItems: 10
+          items:
+            $ref: "#/components/schemas/CreateArticleInput"
+
+    GenerateArticleInput:
+      type: object
+      required: [selected_question_ids]
+      properties:
+        selected_question_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          minItems: 1
+        brand_voice_id:
+          type: string
+        title:
+          type: string
+          maxLength: 500
+
+    ArticleCreatedResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            status:
+              type: string
+              example: generating
+            article_type:
+              $ref: "#/components/schemas/ArticleType"
+            title:
+              type: string
+            created_at:
+              type: string
+              format: date-time
+
+    ArticleInteractiveResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            id:
+              nullable: true
+            status:
+              type: string
+              example: awaiting_input
+            ideacloud_id:
+              type: string
+              format: uuid
+            article_type:
+              $ref: "#/components/schemas/ArticleType"
+            required_inputs:
+              type: object
+
+    ArticleBatchResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                  article_type:
+                    $ref: "#/components/schemas/ArticleType"
+                  title:
+                    type: string
+                  error:
+                    type: string
+                  created_at:
+                    type: string
+                    format: date-time
+
+    ArticleListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              title:
+                type: string
+              article_type:
+                $ref: "#/components/schemas/ArticleType"
+              status:
+                type: string
+              created_at:
+                type: string
+                format: date-time
+              updated_at:
+                type: string
+                format: date-time
+        pagination:
+          $ref: "#/components/schemas/PaginationInfo"
+
+    ArticleDetailResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            title:
+              type: string
+            article_type:
+              $ref: "#/components/schemas/ArticleType"
+            metadata:
+              type: object
+            components:
+              type: array
+              items:
+                type: object
+                properties:
+                  type:
+                    $ref: "#/components/schemas/ComponentType"
+                  status:
+                    type: string
+                  updated_at:
+                    type: string
+                    format: date-time
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+
+    ArticleHtmlResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            html:
+              type: string
+            component_status:
+              type: string
+            updated_at:
+              type: string
+              format: date-time
+
+    ArticleComponentsResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            components:
+              type: array
+              items:
+                $ref: "#/components/schemas/ComponentDetail"
+
+    ArticleSingleComponentResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/ComponentDetail"
+
+    ComponentDetail:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          $ref: "#/components/schemas/ComponentType"
+        content:
+          type: object
+        metadata:
+          type: object
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    # ─── Compliance ───
+    ComplianceResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            article_id:
+              type: string
+              format: uuid
+            status:
+              type: string
+              enum: [not_checked, checking, completed]
+            report:
+              type: object
+              nullable: true
+              properties:
+                score:
+                  type: integer
+                issues:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      severity:
+                        type: string
+                      rule:
+                        type: string
+                      message:
+                        type: string
+                      location:
+                        type: string
+                checked_at:
+                  type: string
+                  format: date-time
+
+    # ─── Content Tools ───
+    ContentToolsInput:
+      type: object
+      properties:
+        tools:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContentToolName"
+          minItems: 1
+
+    ContentToolsResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            article_id:
+              type: string
+              format: uuid
+            tools:
+              type: array
+              items:
+                type: string
+            status:
+              type: string
+              example: generating
+
+    # ─── Inventory ───
+    GenerateDescriptionBatchInput:
+      type: object
+      required: [vins]
+      properties:
+        vins:
+          type: array
+          items:
+            type: string
+            minLength: 11
+            maxLength: 17
+          minItems: 1
+          maxItems: 50
+
+    VehicleSummary:
+      type: object
+      properties:
+        vin:
+          type: string
+        year:
+          type: integer
+        make:
+          type: string
+        model:
+          type: string
+        trim:
+          type: string
+        condition:
+          type: string
+        price:
+          type: number
+        mileage:
+          type: integer
+        exterior_color:
+          type: string
+        interior_color:
+          type: string
+        has_description:
+          type: boolean
+        image_url:
+          type: string
+        updated_at:
+          type: string
+          format: date-time
+
+    InventoryListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/VehicleSummary"
+        pagination:
+          $ref: "#/components/schemas/PaginationInfo"
+
+    VehicleDetailResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            vin:
+              type: string
+            year:
+              type: integer
+            make:
+              type: string
+            model:
+              type: string
+            trim:
+              type: string
+            condition:
+              type: string
+            price:
+              type: number
+            msrp:
+              type: number
+            mileage:
+              type: integer
+            exterior_color:
+              type: string
+            interior_color:
+              type: string
+            engine:
+              type: string
+            transmission:
+              type: string
+            drivetrain:
+              type: string
+            fuel_type:
+              type: string
+            body_style:
+              type: string
+            features: {}
+            image_url:
+              type: string
+            images:
+              type: array
+              items:
+                type: string
+            ai_description:
+              type: string
+            description_status:
+              type: string
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+
+    DescriptionResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            vin:
+              type: string
+            status:
+              type: string
+            description:
+              type: string
+              nullable: true
+            generated_at:
+              type: string
+              format: date-time
+              nullable: true
+
+    DescriptionBatchResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                type: object
+                properties:
+                  vin:
+                    type: string
+                  status:
+                    type: string
+                  error:
+                    type: string
+
+    InventoryFeedResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            count:
+              type: integer
+            vehicles:
+              type: array
+              items:
+                type: object
+                properties:
+                  vin:
+                    type: string
+                  year:
+                    type: integer
+                  make:
+                    type: string
+                  model:
+                    type: string
+                  trim:
+                    type: string
+                  condition:
+                    type: string
+                  price:
+                    type: number
+                  mileage:
+                    type: integer
+                  exterior_color:
+                    type: string
+                  interior_color:
+                    type: string
+                  ai_description:
+                    type: string
+                  image_url:
+                    type: string
+
+    InventoryStatsResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            total_vehicles:
+              type: integer
+            with_ai_description:
+              type: integer
+            without_ai_description:
+              type: integer
+            new_vehicles:
+              type: integer
+            used_vehicles:
+              type: integer
+            description_coverage_pct:
+              type: integer
+
+    # ─── Site ───
+    SiteResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            domain:
+              type: string
+            platform:
+              type: string
+            oem:
+              type: string
+            state:
+              type: string
+            city:
+              type: string
+            zip:
+              type: string
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+
+    CategoriesResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            categories:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  slug:
+                    type: string
+                  description:
+                    type: string
+                  article_count:
+                    type: integer
+
+    BrandVoicesResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            brand_voices:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  description:
+                    type: string
+                  is_default:
+                    type: boolean
+                  created_at:
+                    type: string
+                    format: date-time
+
+    ElementsResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            elements:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  type:
+                    type: string
+                  content:
+                    type: string
+                  created_at:
+                    type: string
+                    format: date-time
+                  updated_at:
+                    type: string
+                    format: date-time
+
+    SiteArticleTypesResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            article_types:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  label:
+                    type: string
+                  description:
+                    type: string
+
+    # ─── Webhooks ───
+    CreateWebhookInput:
+      type: object
+      required: [url, events]
+      properties:
+        url:
+          type: string
+          format: uri
+          description: HTTPS URL to receive webhooks
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/WebhookEventType"
+          minItems: 1
+
+    UpdateWebhookInput:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/WebhookEventType"
+          minItems: 1
+        is_active:
+          type: boolean
+
+    WebhookCreatedResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+            url:
+              type: string
+            events:
+              type: array
+              items:
+                type: string
+            secret:
+              type: string
+              description: HMAC secret (only returned at creation)
+            is_active:
+              type: boolean
+            created_at:
+              type: string
+              format: date-time
+
+    WebhookListResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            webhooks:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  url:
+                    type: string
+                  events:
+                    type: array
+                    items:
+                      type: string
+                  is_active:
+                    type: boolean
+                  failure_count:
+                    type: integer
+                  created_at:
+                    type: string
+                    format: date-time
+                  updated_at:
+                    type: string
+                    format: date-time
+
+    WebhookUpdatedResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+            url:
+              type: string
+            events:
+              type: array
+              items:
+                type: string
+            is_active:
+              type: boolean
+            updated_at:
+              type: string
+              format: date-time
+
+    WebhookTestResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            webhook_id:
+              type: string
+            delivered:
+              type: boolean
+            response_status:
+              type: integer
+            response_body:
+              type: string
+            error:
+              type: string
+
+    WebhookDeliveriesResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            deliveries:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  event_type:
+                    type: string
+                  response_status:
+                    type: integer
+                  attempt_count:
+                    type: integer
+                  delivered_at:
+                    type: string
+                    format: date-time
+                    nullable: true
+                  next_retry_at:
+                    type: string
+                    format: date-time
+                    nullable: true
+                  created_at:
+                    type: string
+                    format: date-time
